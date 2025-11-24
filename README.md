@@ -107,8 +107,29 @@ This project includes Docker support for easy development and deployment:
 
 See [DOCKER.md](./DOCKER.md) for complete Docker setup guide.
 
+## 🔐 Authentication
+
+This API uses **API Key authentication** with **Role-Based Access Control (RBAC)**.
+
+**Quick Start**:
+```bash
+# Generate test API keys
+npx prisma db seed
+
+# Use API key in requests
+curl -H "X-API-Key: your-key-here" http://localhost:3000/v2/api-keys
+```
+
+**Roles**:
+- `admin` - Full system access
+- `registry_owner` - Registry-specific access
+- `public` - Read-only access
+
+See [Authentication Guide](./docs/AUTHENTICATION.md) for complete documentation.
+
 ## 📚 Documentation
 
+- [Authentication & Authorization](./docs/AUTHENTICATION.md) ⭐
 - [Docker Setup Guide](./DOCKER.md)
 - [API Documentation](./docs/api-endpoints.md)
 - [Database Schema](./docs/database-schema.md)
