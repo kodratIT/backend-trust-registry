@@ -80,7 +80,25 @@ const swaggerUiOptions = {
   customCss: `
     .swagger-ui .topbar { display: none }
     .swagger-ui .info { margin: 20px 0; }
-    .swagger-ui .scheme-container { background: #fafafa; padding: 20px; }
+    .swagger-ui .scheme-container { 
+      background: #fafafa; 
+      padding: 20px; 
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .swagger-ui .servers { 
+      margin: 20px 0; 
+    }
+    .swagger-ui .servers-title {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .swagger-ui select {
+      font-size: 14px;
+      padding: 8px;
+      border-radius: 4px;
+    }
   `,
   customSiteTitle: 'ToIP Trust Registry v2 API Documentation',
   swaggerOptions: {
@@ -91,6 +109,9 @@ const swaggerUiOptions = {
     filter: true,
     showExtensions: true,
     showCommonExtensions: true,
+    defaultModelsExpandDepth: 3,
+    defaultModelExpandDepth: 3,
+    displayOperationId: false,
     syntaxHighlight: {
       activate: true,
       theme: 'monokai',
@@ -98,6 +119,7 @@ const swaggerUiOptions = {
     tryItOutEnabled: true,
     requestSnippetsEnabled: true,
     persistAuthorization: true,
+    supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch'],
   },
 };
 

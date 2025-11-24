@@ -28,11 +28,25 @@ const options: swaggerJsdoc.Options = {
     servers: [
       {
         url: `http://${env.HOST}:${env.PORT}`,
-        description: 'Development server',
+        description: 'Development Server (Local)',
+        variables: {
+          host: {
+            default: env.HOST,
+            description: 'Server host',
+          },
+          port: {
+            default: env.PORT.toString(),
+            description: 'Server port',
+          },
+        },
+      },
+      {
+        url: 'http://localhost:3000',
+        description: 'Local Development',
       },
       {
         url: 'https://api.trustregistry.example.com',
-        description: 'Production server',
+        description: 'Production Server',
       },
     ],
     components: {
