@@ -1,9 +1,11 @@
 /**
  * Authentication Middleware
  * ToIP Trust Registry v2 Backend
- * 
+ *
  * Validates API keys and attaches user info to requests
  */
+
+/* eslint-disable no-console */
 
 import { Request, Response, NextFunction } from 'express';
 import { APIKey } from '@prisma/client';
@@ -80,7 +82,7 @@ export async function authenticate(
  */
 export async function optionalAuthenticate(
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> {
   try {

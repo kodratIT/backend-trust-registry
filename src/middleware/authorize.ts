@@ -1,9 +1,11 @@
 /**
  * Authorization Middleware (RBAC)
  * ToIP Trust Registry v2 Backend
- * 
+ *
  * Role-based access control for API endpoints
  */
+
+/* eslint-disable no-console */
 
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './authenticate';
@@ -20,7 +22,7 @@ const ROLE_HIERARCHY: Record<string, number> = {
 /**
  * Authorization middleware factory
  * Creates middleware that checks if user has required role(s)
- * 
+ *
  * @param allowedRoles - Array of roles that are allowed to access the endpoint
  * @returns Express middleware function
  */
@@ -62,7 +64,7 @@ export function authorize(...allowedRoles: string[]) {
 
 /**
  * Check if user has minimum role level
- * 
+ *
  * @param requiredRole - Minimum required role
  * @returns Express middleware function
  */
@@ -113,7 +115,7 @@ export const requireRegistryOwner = authorize('registry_owner', 'admin');
 
 /**
  * Check if user owns the specified registry
- * 
+ *
  * @param getRegistryId - Function to extract registry ID from request
  * @returns Express middleware function
  */
@@ -174,10 +176,6 @@ export function requireRegistryAccess(
  * Allow public access (no authentication required)
  * This is just a marker middleware for documentation purposes
  */
-export function allowPublic(
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): void {
+export function allowPublic(_req: AuthenticatedRequest, _res: Response, next: NextFunction): void {
   next();
 }

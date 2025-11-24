@@ -35,7 +35,6 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "removeComments": true,
     "newLine": "lf",
     
@@ -47,15 +46,10 @@
     "noEmitOnError": true
   },
   "include": [
-    "src/**/*",
-    "prisma/**/*",
-    "scripts/**/*"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "tests",
-    "**/*.spec.ts",
-    "**/*.test.ts"
+    "dist"
   ]
 }

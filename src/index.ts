@@ -3,6 +3,8 @@
  * Main application entry point
  */
 
+/* eslint-disable no-console */
+
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import { env, isDevelopment } from './config/env';
@@ -37,6 +39,13 @@ app.get('/', (_req: Request, res: Response) => {
     documentation: '/api-docs',
   });
 });
+
+// API Routes
+import apiKeyRoutes from './routes/apiKeyRoutes';
+import trustFrameworkRoutes from './routes/trustFrameworkRoutes';
+
+app.use('/v2/api-keys', apiKeyRoutes);
+app.use('/v2/trust-frameworks', trustFrameworkRoutes);
 
 // Import error handlers
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
