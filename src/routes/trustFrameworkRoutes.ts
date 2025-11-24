@@ -14,6 +14,11 @@ import {
 } from '../controllers/trustFrameworkController';
 import { authenticate } from '../middleware/authenticate';
 import { requireAdmin } from '../middleware/authorize';
+import { validate } from '../middleware/validation';
+import {
+  createTrustFrameworkSchema,
+  updateTrustFrameworkSchema,
+} from '../schemas/trustFrameworkSchemas';
 
 const router = Router();
 
@@ -22,7 +27,13 @@ const router = Router();
  * Create a new trust framework
  * Admin only
  */
-router.post('/', authenticate, requireAdmin, createTrustFramework);
+router.post(
+  '/',
+  authenticate,
+  requireAdmin,
+  validate(createTrustFrameworkSchema),
+  createTrustFramework
+);
 
 /**
  * GET /v2/trust-frameworks
@@ -43,6 +54,12 @@ router.get('/:id', getTrustFramework);
  * Update a trust framework
  * Admin only
  */
-router.put('/:id', authenticate, requireAdmin, updateTrustFramework);
+router.put(
+  '/:id',
+  authenticate,
+  requireAdmin,
+  validate(updateTrustFrameworkSchema),
+  updateTrustFramework
+);
 
 export default router;

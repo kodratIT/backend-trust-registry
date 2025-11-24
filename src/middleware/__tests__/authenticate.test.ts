@@ -3,7 +3,7 @@
  * ToIP Trust Registry v2 Backend
  */
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { authenticate, optionalAuthenticate, AuthenticatedRequest } from '../authenticate';
 import { APIKeyModel } from '../../models/APIKeyModel';
 
@@ -33,11 +33,7 @@ describe('authenticate middleware', () => {
   it('should return 401 if no API key is provided', async () => {
     (mockRequest.header as jest.Mock).mockReturnValue(undefined);
 
-    await authenticate(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      nextFunction
-    );
+    await authenticate(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction);
 
     expect(mockResponse.status).toHaveBeenCalledWith(401);
     expect(mockResponse.json).toHaveBeenCalledWith({
@@ -54,11 +50,7 @@ describe('authenticate middleware', () => {
       reason: 'Invalid API key',
     });
 
-    await authenticate(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      nextFunction
-    );
+    await authenticate(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction);
 
     expect(mockResponse.status).toHaveBeenCalledWith(401);
     expect(mockResponse.json).toHaveBeenCalledWith({
@@ -75,11 +67,7 @@ describe('authenticate middleware', () => {
       reason: 'API key has expired',
     });
 
-    await authenticate(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      nextFunction
-    );
+    await authenticate(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction);
 
     expect(mockResponse.status).toHaveBeenCalledWith(401);
     expect(mockResponse.json).toHaveBeenCalledWith({
@@ -107,11 +95,7 @@ describe('authenticate middleware', () => {
       apiKey: mockApiKey,
     });
 
-    await authenticate(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      nextFunction
-    );
+    await authenticate(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction);
 
     expect(mockRequest.apiKey).toEqual(mockApiKey);
     expect(mockRequest.user).toEqual({
@@ -141,11 +125,7 @@ describe('authenticate middleware', () => {
       apiKey: mockApiKey,
     });
 
-    await authenticate(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      nextFunction
-    );
+    await authenticate(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction);
 
     expect(mockRequest.user).toEqual({
       id: 'key-456',
@@ -159,11 +139,7 @@ describe('authenticate middleware', () => {
     (mockRequest.header as jest.Mock).mockReturnValue('valid-key');
     (APIKeyModel.verify as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-    await authenticate(
-      mockRequest as AuthenticatedRequest,
-      mockResponse as Response,
-      nextFunction
-    );
+    await authenticate(mockRequest as AuthenticatedRequest, mockResponse as Response, nextFunction);
 
     expect(mockResponse.status).toHaveBeenCalledWith(500);
     expect(mockResponse.json).toHaveBeenCalledWith({
