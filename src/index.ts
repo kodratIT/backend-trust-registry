@@ -7,7 +7,9 @@
 
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
 import { env, isDevelopment } from './config/env';
+import { swaggerSpec } from './config/swagger';
 
 // Initialize Express application
 const app: Application = express();
@@ -40,6 +42,16 @@ app.get('/', (_req: Request, res: Response) => {
   });
 });
 
+// Swagger API Documentation
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'ToIP Trust Registry v2 API Documentation',
+  })
+);
+
 // API Routes
 import apiKeyRoutes from './routes/apiKeyRoutes';
 import trustFrameworkRoutes from './routes/trustFrameworkRoutes';
@@ -61,6 +73,7 @@ if (require.main === module) {
   app.listen(PORT, HOST, () => {
     console.log(`🚀 Server running on http://${HOST}:${PORT}`);
     console.log(`📚 Health check: http://${HOST}:${PORT}/health`);
+    console.log(`📖 API Documentation: http://${HOST}:${PORT}/api-docs`);
     console.log(`🌍 Environment: ${env.NODE_ENV}`);
     if (isDevelopment) {
       console.log(`⚙️  Configuration loaded and validated`);
