@@ -5,17 +5,14 @@
 
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+import { env, isDevelopment } from './config/env';
 
 // Initialize Express application
 const app: Application = express();
 
 // Configuration
-const PORT: number = parseInt(process.env.PORT || '3000', 10);
-const HOST: string = process.env.HOST || 'localhost';
+const PORT: number = env.PORT;
+const HOST: string = env.HOST;
 
 // Middleware
 app.use(cors());
@@ -56,7 +53,10 @@ if (require.main === module) {
   app.listen(PORT, HOST, () => {
     console.log(`🚀 Server running on http://${HOST}:${PORT}`);
     console.log(`📚 Health check: http://${HOST}:${PORT}/health`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌍 Environment: ${env.NODE_ENV}`);
+    if (isDevelopment) {
+      console.log(`⚙️  Configuration loaded and validated`);
+    }
   });
 }
 
