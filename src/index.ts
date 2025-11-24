@@ -38,15 +38,14 @@ app.get('/', (_req: Request, res: Response) => {
   });
 });
 
-// 404 handler
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({
-    error: {
-      code: 'NOT_FOUND',
-      message: 'Endpoint not found',
-    },
-  });
-});
+// Import error handlers
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+
+// 404 handler (must be after all routes)
+app.use(notFoundHandler);
+
+// Global error handler (must be last)
+app.use(errorHandler);
 
 // Start server
 if (require.main === module) {
