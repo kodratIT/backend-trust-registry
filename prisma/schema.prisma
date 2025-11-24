@@ -1,0 +1,353 @@
+// Prisma Schema for ToIP Trust Registry v2
+// Database: PostgreSQL 15+
+// Date: November 2024
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// TRUST FRAMEWORKS
+// ============================================
+
+model TrustFramework {
+  id                      String            @id @default(uuid())
+  name                    String            @db.VarChar(255)
+  version                 String            @db.VarChar(50)
+  description             String?           @db.Text
+  governanceFrameworkUrl  String?           @db.VarChar(500)
+  legalAgreements         Json?             // Array of URLs
+  jurisdictions           Json?             // Array of jurisdiction codes
+  contexts                Json?             // Array of context strings
+  status                  String            @default("active") @db.VarChar(50)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  
+  // Relations
+  trustRegistries         TrustRegistry[]
+  credentialSchemas       CredentialSchema[]
+  issuers                 Issuer[]
+  verifiers               Verifier[]
+  
+  @@index([status])
+  @@map("trust_frameworks")
+}
+
+// ============================================
+// TRUST REGISTRIES
+// ============================================
+
+model TrustRegistry {
+  id                    String            @id @default(uuid())
+  name                  String            @db.VarChar(255)
+  description           String?           @db.Text
+  trustFrameworkId      String?
+  ecosystemDid          String            @db.VarChar(500)
+  governanceAuthority   String?           @db.VarChar(500)
+  status                String            @default("active") @db.VarChar(50)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  // Relations
+  trustFramework        TrustFramework?   @relation(fields: [trustFrameworkId], references: [id])
+  credentialSchemas     CredentialSchema[]
+  issuers               Issuer[]
+  verifiers             Verifier[]
+  federationConnections FederationConnection[]
+  
+  @@index([status])
+  @@index([ecosystemDid])
+  @@map("trust_registries")
+}
+
+// ============================================
+// CREDENTIAL SCHEMAS
+// ============================================
+
+model CredentialSchema {
+  id                  String          @id @default(uuid())
+  registryId          String
+  trustFrameworkId    String?
+  name                String          @db.VarChar(255)
+  version             String          @db.VarChar(50)
+  type                String          @db.VarChar(500)
+  jsonSchema          Json            // JSON Schema definition
+  contexts            Json?           // Array of allowed contexts
+  jurisdictions       Json?           // Array of jurisdictions
+  issuerMode          String          @db.VarChar(50) // OPEN, ECOSYSTEM, GRANTOR
+  verifierMode        String          @db.VarChar(50) // OPEN, ECOSYSTEM, GRANTOR
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  
+  // Relations
+  registry            TrustRegistry   @relation(fields: [registryId], references: [id], onDelete: Cascade)
+  trustFramework      TrustFramework? @relation(fields: [trustFrameworkId], references: [id])
+  issuerSchemas       IssuerCredentialType[]
+  verifierSchemas     VerifierCredentialType[]
+  
+  @@index([registryId])
+  @@index([type])
+  @@map("credential_schemas")
+}
+
+// ============================================
+// ISSUERS
+// ============================================
+
+model Issuer {
+  id                    String          @id @default(uuid())
+  did                   String          @unique @db.VarChar(500)
+  name                  String?         @db.VarChar(255)
+  registryId            String
+  trustFrameworkId      String?
+  status                String          @default("pending") @db.VarChar(50)
+  statusDetails         Json?           // Suspension details, etc.
+  jurisdictions         Json?           // Array of jurisdiction objects
+  contexts              Json?           // Array of allowed contexts
+  accreditationLevel    String?         @db.VarChar(50) // high, medium, low
+  accreditationDetails  Json?           // Accreditation info
+  validFrom             DateTime?
+  validUntil            DateTime?
+  endpoint              String?         @db.VarChar(500)
+  metadata              Json?
+  lifecycle             Json?           // Lifecycle tracking
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  
+  // Relations
+  registry              TrustRegistry   @relation(fields: [registryId], references: [id], onDelete: Cascade)
+  trustFramework        TrustFramework? @relation(fields: [trustFrameworkId], references: [id])
+  credentialTypes       IssuerCredentialType[]
+  delegationsAsRoot     IssuerDelegation[] @relation("RootIssuer")
+  delegationsAsDelegate IssuerDelegation[] @relation("DelegateIssuer")
+  statusHistory         StatusHistory[] @relation("IssuerStatusHistory")
+  registryEntries       RegistryEntry[] @relation("IssuerRegistryEntry")
+  
+  @@index([did])
+  @@index([registryId])
+  @@index([status])
+  @@index([registryId, status])
+  @@map("issuers")
+}
+
+// ============================================
+// ISSUER CREDENTIAL TYPES (Many-to-Many)
+// ============================================
+
+model IssuerCredentialType {
+  issuerId  String
+  schemaId  String
+  
+  issuer    Issuer            @relation(fields: [issuerId], references: [id], onDelete: Cascade)
+  schema    CredentialSchema  @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+  
+  @@id([issuerId, schemaId])
+  @@map("issuer_credential_types")
+}
+
+// ============================================
+// ISSUER DELEGATIONS
+// ============================================
+
+model IssuerDelegation {
+  id                  String    @id @default(uuid())
+  rootIssuerDid       String    @db.VarChar(500)
+  delegateIssuerDid   String    @db.VarChar(500)
+  scope               Json      // { jurisdictions, credentialTypes, contexts }
+  delegationProof     Json      // Cryptographic proof
+  delegatedAt         DateTime  @default(now())
+  validUntil          DateTime?
+  status              String    @default("active") @db.VarChar(50)
+  createdAt           DateTime  @default(now())
+  
+  // Relations
+  rootIssuer          Issuer    @relation("RootIssuer", fields: [rootIssuerDid], references: [did], onDelete: Cascade)
+  delegateIssuer      Issuer    @relation("DelegateIssuer", fields: [delegateIssuerDid], references: [did], onDelete: Cascade)
+  
+  @@index([rootIssuerDid])
+  @@index([delegateIssuerDid])
+  @@index([status])
+  @@map("issuer_delegations")
+}
+
+// ============================================
+// VERIFIERS
+// ============================================
+
+model Verifier {
+  id                    String          @id @default(uuid())
+  did                   String          @unique @db.VarChar(500)
+  name                  String?         @db.VarChar(255)
+  registryId            String
+  trustFrameworkId      String?
+  status                String          @default("pending") @db.VarChar(50)
+  statusDetails         Json?
+  jurisdictions         Json?
+  contexts              Json?
+  accreditationLevel    String?         @db.VarChar(50)
+  accreditationDetails  Json?
+  validFrom             DateTime?
+  validUntil            DateTime?
+  endpoint              String?         @db.VarChar(500)
+  metadata              Json?
+  lifecycle             Json?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  
+  // Relations
+  registry              TrustRegistry   @relation(fields: [registryId], references: [id], onDelete: Cascade)
+  trustFramework        TrustFramework? @relation(fields: [trustFrameworkId], references: [id])
+  credentialTypes       VerifierCredentialType[]
+  statusHistory         StatusHistory[] @relation("VerifierStatusHistory")
+  registryEntries       RegistryEntry[] @relation("VerifierRegistryEntry")
+  
+  @@index([did])
+  @@index([registryId])
+  @@index([status])
+  @@index([registryId, status])
+  @@map("verifiers")
+}
+
+// ============================================
+// VERIFIER CREDENTIAL TYPES (Many-to-Many)
+// ============================================
+
+model VerifierCredentialType {
+  verifierId  String
+  schemaId    String
+  
+  verifier    Verifier          @relation(fields: [verifierId], references: [id], onDelete: Cascade)
+  schema      CredentialSchema  @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+  
+  @@id([verifierId, schemaId])
+  @@map("verifier_credential_types")
+}
+
+// ============================================
+// STATUS HISTORY
+// ============================================
+
+model StatusHistory {
+  id              String    @id @default(uuid())
+  entityType      String    @db.VarChar(50) // issuer, verifier
+  entityId        String
+  status          String    @db.VarChar(50)
+  previousStatus  String?   @db.VarChar(50)
+  reason          String?   @db.Text
+  changedBy       String?   @db.VarChar(500)
+  timestamp       DateTime  @default(now())
+  
+  // Relations (polymorphic)
+  issuer          Issuer?   @relation("IssuerStatusHistory", fields: [entityId], references: [id], onDelete: Cascade, map: "status_history_issuer_fkey")
+  verifier        Verifier? @relation("VerifierStatusHistory", fields: [entityId], references: [id], onDelete: Cascade, map: "status_history_verifier_fkey")
+  
+  @@index([entityType, entityId])
+  @@index([timestamp])
+  @@map("status_history")
+}
+
+// ============================================
+// REGISTRY ENTRIES (Signed Entries)
+// ============================================
+
+model RegistryEntry {
+  id          String    @id @default(uuid())
+  entryType   String    @db.VarChar(50) // issuer, verifier
+  entityId    String
+  entryData   Json      // Full entry data
+  proof       Json      // Cryptographic proof/signature
+  createdAt   DateTime  @default(now())
+  
+  // Relations (polymorphic)
+  issuer      Issuer?   @relation("IssuerRegistryEntry", fields: [entityId], references: [id], onDelete: Cascade, map: "registry_entries_issuer_fkey")
+  verifier    Verifier? @relation("VerifierRegistryEntry", fields: [entityId], references: [id], onDelete: Cascade, map: "registry_entries_verifier_fkey")
+  
+  @@index([entryType, entityId])
+  @@map("registry_entries")
+}
+
+// ============================================
+// FEDERATION CONNECTIONS
+// ============================================
+
+model FederationConnection {
+  id                      String        @id @default(uuid())
+  localRegistryId         String
+  remoteRegistryId        String        @db.VarChar(255)
+  remoteRegistryName      String        @db.VarChar(255)
+  remoteRegistryEndpoint  String        @db.VarChar(500)
+  remoteRegistryType      String        @db.VarChar(50) // toip, ebsi, custom
+  trustLevel              String        @db.VarChar(50)
+  federationAgreementUrl  String?       @db.VarChar(500)
+  status                  String        @default("active") @db.VarChar(50)
+  createdAt               DateTime      @default(now())
+  
+  // Relations
+  localRegistry           TrustRegistry @relation(fields: [localRegistryId], references: [id], onDelete: Cascade)
+  
+  @@index([localRegistryId])
+  @@index([status])
+  @@map("federation_connections")
+}
+
+// ============================================
+// DID DIRECTORY
+// ============================================
+
+model DIDDirectory {
+  id          String    @id @default(uuid())
+  did         String    @unique @db.VarChar(500)
+  serviceType String?   @db.VarChar(100)
+  endpoint    String?   @db.VarChar(500)
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  
+  @@index([did])
+  @@index([serviceType])
+  @@map("did_directory")
+}
+
+// ============================================
+// AUDIT LOGS
+// ============================================
+
+model AuditLog {
+  id            String    @id @default(uuid())
+  actor         String?   @db.VarChar(500)
+  action        String    @db.VarChar(100)
+  resourceType  String    @db.VarChar(100)
+  resourceId    String?
+  details       Json?
+  result        String    @db.VarChar(50) // success, failure
+  timestamp     DateTime  @default(now())
+  
+  @@index([timestamp])
+  @@index([actor])
+  @@index([action])
+  @@index([resourceType])
+  @@map("audit_logs")
+}
+
+// ============================================
+// API KEYS
+// ============================================
+
+model APIKey {
+  id          String    @id @default(uuid())
+  keyHash     String    @unique @db.VarChar(255)
+  name        String    @db.VarChar(255)
+  role        String    @db.VarChar(50) // admin, registry_owner, public
+  registryId  String?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  
+  @@index([keyHash])
+  @@index([role])
+  @@map("api_keys")
+}
