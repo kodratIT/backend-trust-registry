@@ -4,14 +4,37 @@ Backend API for ToIP Trust Registry v2 System - A verifiable credentials trust r
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### Option 1: Docker (Recommended)
+
+**Prerequisites**:
+- Docker Engine 20.10+
+- Docker Compose 2.0+
+
+**Steps**:
+```bash
+# Copy environment variables
+cp .env.example .env
+
+# Start all services (PostgreSQL + Redis + API)
+docker-compose -f docker-compose.dev.yml up -d
+
+# View logs
+docker-compose -f docker-compose.dev.yml logs -f
+
+# API will be available at http://localhost:3000
+```
+
+See [DOCKER.md](./DOCKER.md) for detailed Docker setup guide.
+
+### Option 2: Local Development
+
+**Prerequisites**:
 - Node.js >= 20.0.0
 - npm >= 10.0.0
 - PostgreSQL 15+
 - Redis 7+
 
-### Installation
-
+**Steps**:
 ```bash
 # Install dependencies
 npm install
@@ -75,8 +98,18 @@ backend/
 - **Testing**: Jest
 - **Linting**: ESLint + Prettier
 
+## 🐳 Docker
+
+This project includes Docker support for easy development and deployment:
+
+- **Development**: `docker-compose.dev.yml` - Hot reload, debug logging
+- **Production**: `docker-compose.yml` - Optimized build, security hardened
+
+See [DOCKER.md](./DOCKER.md) for complete Docker setup guide.
+
 ## 📚 Documentation
 
+- [Docker Setup Guide](./DOCKER.md)
 - [API Documentation](./docs/api-endpoints.md)
 - [Database Schema](./docs/database-schema.md)
 - [Architecture](./docs/architecture.md)
