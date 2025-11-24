@@ -69,15 +69,39 @@ app.get('/', (_req: Request, res: Response) => {
   });
 });
 
-// Swagger API Documentation
-app.use(
-  '/api-docs',
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'ToIP Trust Registry v2 API Documentation',
-  })
-);
+// Serve swagger.json as static file
+app.get('/api-docs/swagger.json', (_req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// Swagger API Documentation with enhanced options
+const swaggerUiOptions = {
+  customCss: `
+    .swagger-ui .topbar { display: none }
+    .swagger-ui .info { margin: 20px 0; }
+    .swagger-ui .scheme-container { background: #fafafa; padding: 20px; }
+  `,
+  customSiteTitle: 'ToIP Trust Registry v2 API Documentation',
+  swaggerOptions: {
+    url: '/api-docs/swagger.json',
+    deepLinking: true,
+    displayRequestDuration: true,
+    docExpansion: 'list',
+    filter: true,
+    showExtensions: true,
+    showCommonExtensions: true,
+    syntaxHighlight: {
+      activate: true,
+      theme: 'monokai',
+    },
+    tryItOutEnabled: true,
+    requestSnippetsEnabled: true,
+    persistAuthorization: true,
+  },
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
 // API Routes
 import apiKeyRoutes from './routes/apiKeyRoutes';
