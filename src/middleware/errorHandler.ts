@@ -1,117 +1,186 @@
 /**
- * Global error handling middleware
+ * Error Handler Middleware
+ * ToIP Trust Registry v2 Backend
+ *
+ * Global error handling for Express application
  */
 
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { Request, Response, NextFunction } from 'express';
-import { isProduction } from '../config/env';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/library';
+import { env } from '../config/env';
 
 /**
- * Custom error class with status code
+ * Custom Application Error
  */
 export class AppError extends Error {
   constructor(
     public statusCode: number,
     public message: string,
-    public code?: string,
-    public details?: unknown
+    public isOperational = true
   ) {
     super(message);
-    this.name = 'AppError';
+    Object.setPrototypeOf(this, AppError.prototype);
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
 /**
- * Error response interface
+ * Standard error response format
  */
 interface ErrorResponse {
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-    stack?: string;
-  };
+  error: string;
+  message: string;
+  details?: unknown;
+  stack?: string;
 }
 
 /**
- * Global error handler middleware
+ * 404 Not Found Handler
+ * Catches all requests that don't match any routes
  */
-export function errorHandler(
-  err: Error | AppError,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
-  // Default to 500 Internal Server Error
-  let statusCode = 500;
-  let code = 'INTERNAL_SERVER_ERROR';
-  let message = 'An unexpected error occurred';
-  let details: unknown = undefined;
-
-  // Handle AppError instances
-  if (err instanceof AppError) {
-    statusCode = err.statusCode;
-    code = err.code || 'APPLICATION_ERROR';
-    message = err.message;
-    details = err.details;
-  }
-  // Handle validation errors
-  else if (err.name === 'ValidationError') {
-    statusCode = 400;
-    code = 'VALIDATION_ERROR';
-    message = err.message;
-  }
-  // Handle other known errors
-  else if (err.message) {
-    message = err.message;
-  }
-
-  // Build error response
-  const errorResponse: ErrorResponse = {
-    error: {
-      code,
-      message,
-    },
-  };
-
-  // Add optional fields
-  if (details) {
-    errorResponse.error.details = details;
-  }
-  if (!isProduction && err.stack) {
-    errorResponse.error.stack = err.stack;
-  }
-
-  // Log error (in production, use proper logging service)
-  if (!isProduction) {
-    console.error('Error:', {
-      code,
-      message,
-      stack: err.stack,
-    });
-  }
-
-  // Send error response
-  res.status(statusCode).json(errorResponse);
-}
-
-/**
- * 404 Not Found handler
- */
-export function notFoundHandler(_req: Request, res: Response): void {
+export function notFoundHandler(req: Request, res: Response, _next: NextFunction): void {
   res.status(404).json({
-    error: {
-      code: 'NOT_FOUND',
-      message: 'The requested resource was not found',
-    },
+    error: 'Not Found',
+    message: `Cannot ${req.method} ${req.path}`,
   });
 }
 
 /**
- * Async handler wrapper to catch errors in async route handlers
+ * Global Error Handler
+ * Catches all errors thrown in the application
  */
-export function asyncHandler(
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
+  console.error('Error:', err);
+
+  // Default error response
+  let statusCode = 500;
+  let errorName = 'Internal Server Error';
+  let message = 'An unexpected error occurred';
+  let details: unknown = undefined;
+
+  // Handle different error types
+  if (err instanceof AppError) {
+    // Custom application errors
+    statusCode = err.statusCode;
+    errorName = err.name;
+    message = err.message;
+  } else if (err instanceof PrismaClientKnownRequestError) {
+    // Prisma database errors
+    const prismaError = handlePrismaError(err);
+    statusCode = prismaError.statusCode;
+    errorName = prismaError.error;
+    message = prismaError.message;
+    details = prismaError.details;
+  } else if (err instanceof PrismaClientValidationError) {
+    // Prisma validation errors
+    statusCode = 400;
+    errorName = 'Validation Error';
+    message = 'Invalid data provided';
+  } else if (err instanceof SyntaxError && 'body' in err) {
+    // JSON parsing errors
+    statusCode = 400;
+    errorName = 'Bad Request';
+    message = 'Invalid JSON in request body';
+  } else if (err.name === 'ValidationError') {
+    // Validation errors
+    statusCode = 400;
+    errorName = 'Validation Error';
+    message = err.message;
+  } else if (err.name === 'UnauthorizedError') {
+    // JWT/Auth errors
+    statusCode = 401;
+    errorName = 'Unauthorized';
+    message = err.message || 'Authentication failed';
+  }
+
+  // Build error response
+  const errorResponse: ErrorResponse = {
+    error: errorName,
+    message,
+  };
+
+  // Add details if available
+  if (details) {
+    errorResponse.details = details;
+  }
+
+  // Include stack trace in development
+  if (env.NODE_ENV === 'development') {
+    errorResponse.stack = err.stack;
+  }
+
+  res.status(statusCode).json(errorResponse);
+}
+
+/**
+ * Handle Prisma-specific errors
+ */
+function handlePrismaError(err: PrismaClientKnownRequestError): {
+  statusCode: number;
+  error: string;
+  message: string;
+  details?: unknown;
+} {
+  switch (err.code) {
+    case 'P2002':
+      // Unique constraint violation
+      return {
+        statusCode: 409,
+        error: 'Conflict',
+        message: 'A record with this value already exists',
+        details: {
+          field: err.meta?.target,
+        },
+      };
+
+    case 'P2025':
+      // Record not found
+      return {
+        statusCode: 404,
+        error: 'Not Found',
+        message: 'The requested record was not found',
+      };
+
+    case 'P2003':
+      // Foreign key constraint violation
+      return {
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Invalid reference to related record',
+        details: {
+          field: err.meta?.field_name,
+        },
+      };
+
+    case 'P2014':
+      // Required relation violation
+      return {
+        statusCode: 400,
+        error: 'Bad Request',
+        message: 'Required relation is missing',
+      };
+
+    default:
+      return {
+        statusCode: 500,
+        error: 'Database Error',
+        message: 'A database error occurred',
+      };
+  }
+}
+
+/**
+ * Async error wrapper
+ * Wraps async route handlers to catch errors
+ */
+export function asyncHandler<T>(
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<T>
 ) {
   return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);
