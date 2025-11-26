@@ -13,6 +13,7 @@ import {
   updateTrustRegistry,
   linkTrustFramework,
   unlinkTrustFramework,
+  verifyDID,
 } from '../controllers/trustRegistryController';
 import { authenticate } from '../middleware/authenticate';
 import { requireAdmin, authorize } from '../middleware/authorize';
@@ -85,6 +86,54 @@ router.post(
   validate(createTrustRegistrySchema),
   createTrustRegistry
 );
+
+/**
+ * @swagger
+ * /v2/registries/verify-did:
+ *   post:
+ *     summary: Verify/resolve a DID
+ *     description: Validate DID format and attempt to resolve it
+ *     tags: [Trust Registries]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - did
+ *             properties:
+ *               did:
+ *                 type: string
+ *                 example: did:web:example.com
+ *                 description: The DID to verify
+ *     responses:
+ *       200:
+ *         description: DID verification result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     did:
+ *                       type: string
+ *                     valid:
+ *                       type: boolean
+ *                     method:
+ *                       type: string
+ *                     didDocument:
+ *                       type: object
+ *                     error:
+ *                       type: string
+ *       400:
+ *         description: Invalid DID format
+ */
+router.post('/verify-did', verifyDID);
 
 /**
  * @swagger

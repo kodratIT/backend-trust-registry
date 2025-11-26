@@ -8,11 +8,13 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authenticate';
 import { PrismaClient } from '@prisma/client';
+import { validateDIDFormat, resolveDID } from '../services/didResolver';
 
 const prisma = new PrismaClient();
 
@@ -33,6 +35,22 @@ export async function createTrustRegistry(req: AuthenticatedRequest, res: Respon
         message: 'Name and ecosystemDid are required',
       });
       return;
+    }
+
+    // Validate DID format
+    const didValidation = validateDIDFormat(ecosystemDid);
+    if (!didValidation.valid) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: didValidation.error,
+      });
+      return;
+    }
+
+    // Try to resolve DID (optional - warns but doesn't fail)
+    const didResolution = await resolveDID(ecosystemDid);
+    if (!didResolution.valid) {
+      console.warn(`DID resolution warning for ${ecosystemDid}: ${didResolution.error}`);
     }
 
     // Validate trust framework exists if provided
@@ -466,6 +484,62 @@ export async function unlinkTrustFramework(
     res.status(500).json({
       error: 'Internal Server Error',
       message: 'Failed to unlink trust framework',
+    });
+  }
+}
+
+/**
+ * Verify/resolve a DID
+ * POST /v2/registries/verify-did
+ * Public access
+ */
+export async function verifyDID(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const { did } = req.body;
+
+    if (!did) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: 'DID is required',
+      });
+      return;
+    }
+
+    // Validate DID format
+    const formatValidation = validateDIDFormat(did);
+    if (!formatValidation.valid) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: formatValidation.error,
+        data: {
+          did,
+          valid: false,
+          method: formatValidation.method || 'unknown',
+        },
+      });
+      return;
+    }
+
+    // Resolve DID
+    const resolution = await resolveDID(did);
+
+    res.status(200).json({
+      message: resolution.valid
+        ? 'DID is valid and resolvable'
+        : 'DID format is valid but resolution failed',
+      data: {
+        did: resolution.did,
+        valid: resolution.valid,
+        method: resolution.method,
+        didDocument: resolution.didDocument,
+        error: resolution.error,
+      },
+    });
+  } catch (error) {
+    console.error('Error verifying DID:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to verify DID',
     });
   }
 }
