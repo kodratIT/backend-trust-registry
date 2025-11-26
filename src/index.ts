@@ -139,6 +139,7 @@ import credentialSchemaRoutes from './routes/credentialSchemaRoutes';
 import issuerRoutes from './routes/issuerRoutes';
 import verifierRoutes from './routes/verifierRoutes';
 import auditRoutes from './routes/auditRoutes';
+import queryRoutes from './routes/queryRoutes';
 
 app.use('/v2/api-keys', apiKeyRoutes);
 app.use('/v2/trust-frameworks', trustFrameworkRoutes);
@@ -147,6 +148,7 @@ app.use('/v2/schemas', credentialSchemaRoutes);
 app.use('/v2/issuers', issuerRoutes);
 app.use('/v2/verifiers', verifierRoutes);
 app.use('/v2/audit-log', auditRoutes);
+app.use('/v2/query', queryRoutes);
 
 // Import error handlers
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';

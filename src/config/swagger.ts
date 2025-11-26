@@ -274,6 +274,10 @@ const options: swaggerJsdoc.Options = {
         name: 'Audit',
         description: 'Audit log queries (admin only)',
       },
+      {
+        name: 'Query',
+        description: 'Trust resolution query API',
+      },
     ],
   },
   apis: ['./src/routes/*.ts', './src/index.ts'],
