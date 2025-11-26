@@ -128,8 +128,8 @@ export async function createDelegation(req: AuthenticatedRequest, res: Response)
       data: {
         rootIssuerDid: decodeURIComponent(rootDid),
         delegateIssuerDid: delegateDid,
-        scope,
-        delegationProof,
+        scope: scope as object,
+        delegationProof: delegationProof as object,
         validUntil: validUntil ? new Date(validUntil) : null,
         status: 'active',
       },
