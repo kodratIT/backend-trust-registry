@@ -254,6 +254,26 @@ const options: swaggerJsdoc.Options = {
         name: 'Trust Registries',
         description: 'Trust registry CRUD operations',
       },
+      {
+        name: 'Credential Schemas',
+        description: 'Credential schema management with JSON Schema validation',
+      },
+      {
+        name: 'Issuers',
+        description: 'Issuer registration and management',
+      },
+      {
+        name: 'Verifiers',
+        description: 'Verifier registration and management',
+      },
+      {
+        name: 'Delegations',
+        description: 'Issuer delegation chain management',
+      },
+      {
+        name: 'Audit',
+        description: 'Audit log queries (admin only)',
+      },
     ],
   },
   apis: ['./src/routes/*.ts', './src/index.ts'],
