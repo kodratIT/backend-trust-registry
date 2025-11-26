@@ -128,9 +128,11 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOpti
 // API Routes
 import apiKeyRoutes from './routes/apiKeyRoutes';
 import trustFrameworkRoutes from './routes/trustFrameworkRoutes';
+import trustRegistryRoutes from './routes/trustRegistryRoutes';
 
 app.use('/v2/api-keys', apiKeyRoutes);
 app.use('/v2/trust-frameworks', trustFrameworkRoutes);
+app.use('/v2/registries', trustRegistryRoutes);
 
 // Import error handlers
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';

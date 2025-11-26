@@ -250,6 +250,10 @@ const options: swaggerJsdoc.Options = {
         name: 'Trust Frameworks',
         description: 'Trust framework CRUD operations',
       },
+      {
+        name: 'Trust Registries',
+        description: 'Trust registry CRUD operations',
+      },
     ],
   },
   apis: ['./src/routes/*.ts', './src/index.ts'],
