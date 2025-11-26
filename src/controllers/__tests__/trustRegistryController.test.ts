@@ -40,11 +40,12 @@ jest.mock('@prisma/client', () => {
 });
 
 // Mock DID Resolver
+const mockValidateDIDFormat = jest.fn().mockReturnValue({ valid: true, method: 'web' });
+const mockResolveDID = jest.fn().mockResolvedValue({ valid: true, did: 'did:web:example.com', method: 'web' });
+
 jest.mock('../../services/didResolver', () => ({
-  validateDIDFormat: jest.fn().mockReturnValue({ valid: true, method: 'web' }),
-  resolveDID: jest
-    .fn()
-    .mockResolvedValue({ valid: true, did: 'did:web:example.com', method: 'web' }),
+  validateDIDFormat: (...args: unknown[]): { valid: boolean; method: string } => mockValidateDIDFormat(...args) as { valid: boolean; method: string },
+  resolveDID: (...args: unknown[]): Promise<{ valid: boolean; did: string; method: string }> => mockResolveDID(...args) as Promise<{ valid: boolean; did: string; method: string }>,
 }));
 
 const prisma = new PrismaClient();
@@ -75,6 +76,10 @@ describe('Trust Registry Controller', () => {
     };
 
     jest.clearAllMocks();
+    
+    // Reset DID resolver mocks
+    mockValidateDIDFormat.mockReturnValue({ valid: true, method: 'web' });
+    mockResolveDID.mockResolvedValue({ valid: true, did: 'did:web:example.com', method: 'web' });
   });
 
   describe('createTrustRegistry', () => {
@@ -137,6 +142,8 @@ describe('Trust Registry Controller', () => {
         ecosystemDid: 'did:web:example.com',
       };
 
+      // No trustFrameworkId, so trustFramework.findUnique won't be called
+      // ecosystemDid check happens after DID validation
       (prisma.trustRegistry.findFirst as jest.Mock).mockResolvedValue({
         id: 'existing-reg',
       });
@@ -157,7 +164,7 @@ describe('Trust Registry Controller', () => {
         trustFrameworkId: 'non-existent-tf',
       };
 
-      (prisma.trustRegistry.findFirst as jest.Mock).mockResolvedValue(null);
+      // trustFramework check happens BEFORE ecosystemDid check in controller
       (prisma.trustFramework.findUnique as jest.Mock).mockResolvedValue(null);
 
       await createTrustRegistry(mockRequest as AuthenticatedRequest, mockResponse as Response);

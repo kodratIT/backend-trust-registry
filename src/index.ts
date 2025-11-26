@@ -125,14 +125,28 @@ const swaggerUiOptions = {
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
+// Audit middleware
+import { auditMiddleware } from './middleware/auditMiddleware';
+
+// Apply audit middleware to all /v2 routes
+app.use('/v2', auditMiddleware);
+
 // API Routes
 import apiKeyRoutes from './routes/apiKeyRoutes';
 import trustFrameworkRoutes from './routes/trustFrameworkRoutes';
 import trustRegistryRoutes from './routes/trustRegistryRoutes';
+import credentialSchemaRoutes from './routes/credentialSchemaRoutes';
+import issuerRoutes from './routes/issuerRoutes';
+import verifierRoutes from './routes/verifierRoutes';
+import auditRoutes from './routes/auditRoutes';
 
 app.use('/v2/api-keys', apiKeyRoutes);
 app.use('/v2/trust-frameworks', trustFrameworkRoutes);
 app.use('/v2/registries', trustRegistryRoutes);
+app.use('/v2/schemas', credentialSchemaRoutes);
+app.use('/v2/issuers', issuerRoutes);
+app.use('/v2/verifiers', verifierRoutes);
+app.use('/v2/audit-log', auditRoutes);
 
 // Import error handlers
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
