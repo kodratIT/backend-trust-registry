@@ -11,6 +11,8 @@ import {
   listTrustRegistries,
   getTrustRegistry,
   updateTrustRegistry,
+  linkTrustFramework,
+  unlinkTrustFramework,
 } from '../controllers/trustRegistryController';
 import { authenticate } from '../middleware/authenticate';
 import { requireAdmin, authorize } from '../middleware/authorize';
@@ -210,6 +212,91 @@ router.put(
   authorize('admin', 'registry_owner'),
   validate(updateTrustRegistrySchema),
   updateTrustRegistry
+);
+
+/**
+ * @swagger
+ * /v2/registries/{id}/trust-framework:
+ *   patch:
+ *     summary: Link registry to trust framework
+ *     description: Link a trust registry to a trust framework (admin or registry owner)
+ *     tags: [Trust Registries]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Trust registry ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - trustFrameworkId
+ *             properties:
+ *               trustFrameworkId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the trust framework to link
+ *     responses:
+ *       200:
+ *         description: Registry linked to trust framework successfully
+ *       400:
+ *         description: Bad request (invalid trust framework or inactive)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Registry or trust framework not found
+ */
+router.patch(
+  '/:id/trust-framework',
+  authenticate,
+  authorize('admin', 'registry_owner'),
+  linkTrustFramework
+);
+
+/**
+ * @swagger
+ * /v2/registries/{id}/trust-framework:
+ *   delete:
+ *     summary: Unlink registry from trust framework
+ *     description: Remove the link between a trust registry and its trust framework
+ *     tags: [Trust Registries]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Trust registry ID
+ *     responses:
+ *       200:
+ *         description: Registry unlinked from trust framework successfully
+ *       400:
+ *         description: Registry is not linked to any trust framework
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Registry not found
+ */
+router.delete(
+  '/:id/trust-framework',
+  authenticate,
+  authorize('admin', 'registry_owner'),
+  unlinkTrustFramework
 );
 
 export default router;

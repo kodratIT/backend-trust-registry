@@ -311,3 +311,161 @@ export async function updateTrustRegistry(req: AuthenticatedRequest, res: Respon
     });
   }
 }
+
+/**
+ * Link a trust registry to a trust framework
+ * PATCH /v2/registries/:id/trust-framework
+ * Admin or registry owner only
+ */
+export async function linkTrustFramework(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { trustFrameworkId } = req.body;
+
+    // Validate trustFrameworkId is provided
+    if (!trustFrameworkId) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: 'trustFrameworkId is required',
+      });
+      return;
+    }
+
+    // Check if trust registry exists
+    const registry = await prisma.trustRegistry.findUnique({
+      where: { id },
+    });
+
+    if (!registry) {
+      res.status(404).json({
+        error: 'Not Found',
+        message: 'Trust registry not found',
+      });
+      return;
+    }
+
+    // Check authorization for registry_owner
+    if (req.user?.role === 'registry_owner') {
+      if (req.user.registryId !== id) {
+        res.status(403).json({
+          error: 'Forbidden',
+          message: 'You can only update your own registry',
+        });
+        return;
+      }
+    }
+
+    // Check if trust framework exists
+    const trustFramework = await prisma.trustFramework.findUnique({
+      where: { id: trustFrameworkId },
+    });
+
+    if (!trustFramework) {
+      res.status(404).json({
+        error: 'Not Found',
+        message: 'Trust framework not found',
+      });
+      return;
+    }
+
+    // Check if trust framework is active
+    if (trustFramework.status !== 'active') {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: 'Cannot link to inactive or deprecated trust framework',
+      });
+      return;
+    }
+
+    // Update trust registry with trust framework link
+    const updatedRegistry = await prisma.trustRegistry.update({
+      where: { id },
+      data: {
+        trustFrameworkId,
+      },
+      include: {
+        trustFramework: true,
+      },
+    });
+
+    res.status(200).json({
+      message: 'Trust registry linked to trust framework successfully',
+      data: updatedRegistry,
+    });
+  } catch (error) {
+    console.error('Error linking trust framework:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to link trust framework',
+    });
+  }
+}
+
+/**
+ * Unlink a trust registry from its trust framework
+ * DELETE /v2/registries/:id/trust-framework
+ * Admin or registry owner only
+ */
+export async function unlinkTrustFramework(
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    // Check if trust registry exists
+    const registry = await prisma.trustRegistry.findUnique({
+      where: { id },
+      include: {
+        trustFramework: true,
+      },
+    });
+
+    if (!registry) {
+      res.status(404).json({
+        error: 'Not Found',
+        message: 'Trust registry not found',
+      });
+      return;
+    }
+
+    // Check authorization for registry_owner
+    if (req.user?.role === 'registry_owner') {
+      if (req.user.registryId !== id) {
+        res.status(403).json({
+          error: 'Forbidden',
+          message: 'You can only update your own registry',
+        });
+        return;
+      }
+    }
+
+    // Check if registry is linked to a trust framework
+    if (!registry.trustFrameworkId) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: 'Trust registry is not linked to any trust framework',
+      });
+      return;
+    }
+
+    // Update trust registry to remove trust framework link
+    const updatedRegistry = await prisma.trustRegistry.update({
+      where: { id },
+      data: {
+        trustFrameworkId: null,
+      },
+    });
+
+    res.status(200).json({
+      message: 'Trust registry unlinked from trust framework successfully',
+      data: updatedRegistry,
+    });
+  } catch (error) {
+    console.error('Error unlinking trust framework:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to unlink trust framework',
+    });
+  }
+}
