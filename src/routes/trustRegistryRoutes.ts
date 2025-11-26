@@ -14,6 +14,11 @@ import {
 } from '../controllers/trustRegistryController';
 import { authenticate } from '../middleware/authenticate';
 import { requireAdmin, authorize } from '../middleware/authorize';
+import { validate } from '../middleware/validation';
+import {
+  createTrustRegistrySchema,
+  updateTrustRegistrySchema,
+} from '../schemas/trustRegistrySchemas';
 
 const router = Router();
 
@@ -71,7 +76,13 @@ const router = Router();
  *       409:
  *         description: Conflict - ecosystemDid already exists
  */
-router.post('/', authenticate, requireAdmin, createTrustRegistry);
+router.post(
+  '/',
+  authenticate,
+  requireAdmin,
+  validate(createTrustRegistrySchema),
+  createTrustRegistry
+);
 
 /**
  * @swagger
@@ -193,6 +204,12 @@ router.get('/:id', getTrustRegistry);
  *       404:
  *         description: Trust registry not found
  */
-router.put('/:id', authenticate, authorize('admin', 'registry_owner'), updateTrustRegistry);
+router.put(
+  '/:id',
+  authenticate,
+  authorize('admin', 'registry_owner'),
+  validate(updateTrustRegistrySchema),
+  updateTrustRegistry
+);
 
 export default router;
