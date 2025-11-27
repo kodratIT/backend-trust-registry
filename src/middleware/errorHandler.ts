@@ -3,6 +3,7 @@
  * ToIP Trust Registry v2 Backend
  *
  * Global error handling for Express application
+ * Supports RFC 7807 Problem Details format
  */
 
 /* eslint-disable no-console */
@@ -14,6 +15,7 @@ import {
   PrismaClientValidationError,
 } from '@prisma/client/runtime/library';
 import { env } from '../config/env';
+import { ProblemDetailsError } from '../errors/trqpErrors';
 
 /**
  * Custom Application Error
@@ -31,13 +33,36 @@ export class AppError extends Error {
 }
 
 /**
- * Standard error response format
+ * RFC 7807 Problem Details response format
  */
-interface ErrorResponse {
-  error: string;
-  message: string;
-  details?: unknown;
+interface ProblemDetails {
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+  instance?: string;
+  errors?: Array<{ field: string; message: string }>;
   stack?: string;
+}
+
+/**
+ * Build RFC 7807 Problem Details response
+ */
+function buildProblemDetails(
+  status: number,
+  title: string,
+  detail: string,
+  instance?: string,
+  errors?: Array<{ field: string; message: string }>
+): ProblemDetails {
+  return {
+    type: `https://api.trustregistry.io/problems/${title.toLowerCase().replace(/\s+/g, '-')}`,
+    title,
+    status,
+    detail,
+    ...(instance && { instance }),
+    ...(errors && { errors }),
+  };
 }
 
 /**
@@ -45,77 +70,85 @@ interface ErrorResponse {
  * Catches all requests that don't match any routes
  */
 export function notFoundHandler(req: Request, res: Response, _next: NextFunction): void {
-  res.status(404).json({
-    error: 'Not Found',
-    message: `Cannot ${req.method} ${req.path}`,
-  });
+  const problemDetails = buildProblemDetails(
+    404,
+    'Not Found',
+    `Cannot ${req.method} ${req.path}`,
+    req.path
+  );
+  res.status(404).contentType('application/problem+json').json(problemDetails);
 }
 
 /**
  * Global Error Handler
  * Catches all errors thrown in the application
+ * Returns RFC 7807 Problem Details format
  */
-export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
+export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
   console.error('Error:', err);
 
-  // Default error response
+  // Handle ProblemDetailsError (RFC 7807 compliant)
+  if (err instanceof ProblemDetailsError) {
+    const response: ProblemDetails = {
+      type: err.type,
+      title: err.title,
+      status: err.status,
+      detail: err.detail,
+      instance: err.instance || req.path,
+    };
+    if (env.NODE_ENV === 'development') {
+      response.stack = err.stack;
+    }
+    res.status(err.status).contentType('application/problem+json').json(response);
+    return;
+  }
+
+  // Default error values
   let statusCode = 500;
-  let errorName = 'Internal Server Error';
-  let message = 'An unexpected error occurred';
-  let details: unknown = undefined;
+  let title = 'Internal Server Error';
+  let detail = 'An unexpected error occurred';
+  let errors: Array<{ field: string; message: string }> | undefined;
 
   // Handle different error types
   if (err instanceof AppError) {
-    // Custom application errors
     statusCode = err.statusCode;
-    errorName = err.name;
-    message = err.message;
+    title = err.name;
+    detail = err.message;
   } else if (err instanceof PrismaClientKnownRequestError) {
-    // Prisma database errors
     const prismaError = handlePrismaError(err);
     statusCode = prismaError.statusCode;
-    errorName = prismaError.error;
-    message = prismaError.message;
-    details = prismaError.details;
+    title = prismaError.error;
+    detail = prismaError.message;
+    if (prismaError.details) {
+      errors = [{ field: String(prismaError.details.field || 'unknown'), message: detail }];
+    }
   } else if (err instanceof PrismaClientValidationError) {
-    // Prisma validation errors
     statusCode = 400;
-    errorName = 'Validation Error';
-    message = 'Invalid data provided';
+    title = 'Validation Error';
+    detail = 'Invalid data provided';
   } else if (err instanceof SyntaxError && 'body' in err) {
-    // JSON parsing errors
     statusCode = 400;
-    errorName = 'Bad Request';
-    message = 'Invalid JSON in request body';
+    title = 'Bad Request';
+    detail = 'Invalid JSON in request body';
   } else if (err.name === 'ValidationError') {
-    // Validation errors
     statusCode = 400;
-    errorName = 'Validation Error';
-    message = err.message;
+    title = 'Validation Error';
+    detail = err.message;
   } else if (err.name === 'UnauthorizedError') {
-    // JWT/Auth errors
     statusCode = 401;
-    errorName = 'Unauthorized';
-    message = err.message || 'Authentication failed';
+    title = 'Unauthorized';
+    detail = err.message || 'Authentication failed';
   }
 
-  // Build error response
-  const errorResponse: ErrorResponse = {
-    error: errorName,
-    message,
-  };
-
-  // Add details if available
-  if (details) {
-    errorResponse.details = details;
-  }
+  // Build RFC 7807 Problem Details response
+  const problemDetails = buildProblemDetails(statusCode, title, detail, req.path, errors);
 
   // Include stack trace in development
   if (env.NODE_ENV === 'development') {
-    errorResponse.stack = err.stack;
+    problemDetails.stack = err.stack;
   }
 
-  res.status(statusCode).json(errorResponse);
+  res.status(statusCode).contentType('application/problem+json').json(problemDetails);
 }
 
 /**
@@ -125,7 +158,7 @@ function handlePrismaError(err: PrismaClientKnownRequestError): {
   statusCode: number;
   error: string;
   message: string;
-  details?: unknown;
+  details?: { field?: unknown };
 } {
   switch (err.code) {
     case 'P2002':

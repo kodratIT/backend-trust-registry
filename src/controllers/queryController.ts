@@ -11,6 +11,7 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authenticate';
 import { PrismaClient } from '@prisma/client';
+import * as cache from '../services/cacheService';
 
 const prisma = new PrismaClient();
 
@@ -108,10 +109,18 @@ function buildWhereClause(params: QueryParams): any {
 }
 
 /**
- * Execute a single query
+ * Execute a single query with caching
  */
 async function executeQuery(params: QueryParams): Promise<QueryResult> {
   const startTime = Date.now();
+
+  // Check cache first
+  const cacheKey = cache.queryKey(params as unknown as Record<string, unknown>);
+  const cachedResult = cache.get<QueryResult>(cacheKey);
+  if (cachedResult) {
+    return { ...cachedResult, queryTime: Date.now() - startTime };
+  }
+
   const where = buildWhereClause(params);
 
   try {
@@ -194,7 +203,7 @@ async function executeQuery(params: QueryParams): Promise<QueryResult> {
       };
     }
 
-    return {
+    const result: QueryResult = {
       found: true,
       entityType: params.entityType,
       entity: {
@@ -214,6 +223,11 @@ async function executeQuery(params: QueryParams): Promise<QueryResult> {
       validAt: params.validAt || new Date().toISOString(),
       queryTime,
     };
+
+    // Cache successful results
+    cache.set(cacheKey, result, cache.CACHE_TTL.QUERY_RESULT);
+
+    return result;
   } catch (error) {
     console.error('Query execution error:', error);
     return {

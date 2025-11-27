@@ -23,6 +23,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Request tracing middleware (X-Request-ID)
+import { tracingMiddleware } from './middleware/tracing';
+app.use(tracingMiddleware);
+
 /**
  * @swagger
  * /health:
@@ -140,6 +144,8 @@ import issuerRoutes from './routes/issuerRoutes';
 import verifierRoutes from './routes/verifierRoutes';
 import auditRoutes from './routes/auditRoutes';
 import queryRoutes from './routes/queryRoutes';
+import signedEntryRoutes from './routes/signedEntryRoutes';
+import trqpRoutes from './routes/trqpRoutes';
 
 app.use('/v2/api-keys', apiKeyRoutes);
 app.use('/v2/trust-frameworks', trustFrameworkRoutes);
@@ -149,6 +155,8 @@ app.use('/v2/issuers', issuerRoutes);
 app.use('/v2/verifiers', verifierRoutes);
 app.use('/v2/audit-log', auditRoutes);
 app.use('/v2/query', queryRoutes);
+app.use('/v2', signedEntryRoutes);
+app.use('/v2', trqpRoutes);
 
 // Import error handlers
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';

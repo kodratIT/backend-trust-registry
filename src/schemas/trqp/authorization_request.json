@@ -1,0 +1,44 @@
+{
+  "$id": "trqp-authorization-request",
+  "title": "AuthorizationRequest",
+  "type": "object",
+  "required": ["entity_id", "authority_id", "action", "resource"],
+  "properties": {
+    "entity_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The identifier for the entity being tested for authorization"
+    },
+    "authority_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The identifier for the authority (ecosystem) being queried"
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The action to check authorization for"
+    },
+    "resource": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The resource to check authorization for"
+    },
+    "context": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time for query. RFC3339 format"
+        },
+        "locator": {
+          "type": "string",
+          "description": "Additional locator information"
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

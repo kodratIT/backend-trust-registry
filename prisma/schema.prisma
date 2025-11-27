@@ -92,6 +92,9 @@ model CredentialSchema {
   
   @@index([registryId])
   @@index([type])
+  // Query API optimization indexes
+  @@index([registryId, type])
+  @@index([trustFrameworkId])
   @@map("credential_schemas")
 }
 
@@ -132,6 +135,12 @@ model Issuer {
   @@index([registryId])
   @@index([status])
   @@index([registryId, status])
+  // Query API optimization indexes
+  @@index([status, validFrom, validUntil])
+  @@index([registryId, status, validFrom, validUntil])
+  @@index([trustFrameworkId, status])
+  @@index([accreditationLevel, status])
+  @@index([createdAt])
   @@map("issuers")
 }
 
@@ -210,6 +219,12 @@ model Verifier {
   @@index([registryId])
   @@index([status])
   @@index([registryId, status])
+  // Query API optimization indexes
+  @@index([status, validFrom, validUntil])
+  @@index([registryId, status, validFrom, validUntil])
+  @@index([trustFrameworkId, status])
+  @@index([accreditationLevel, status])
+  @@index([createdAt])
   @@map("verifiers")
 }
 

@@ -21,11 +21,16 @@ module.exports = {
 
   // Transform files with ts-jest
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.tsx?$$': 'ts-jest',
   },
 
   // Module file extensions
   moduleFileExtensions: ['ts', 'js', 'json'],
+
+  // Transform ESM modules
+  transformIgnorePatterns: [
+    'node_modules/(?!(@noble)/)',
+  ],
 
   // Coverage configuration
   collectCoverageFrom: [

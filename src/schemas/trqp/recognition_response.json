@@ -1,0 +1,47 @@
+{
+  "$id": "trqp-recognition-response",
+  "title": "RecognitionResponse",
+  "type": "object",
+  "required": ["entity_id", "authority_id", "action", "resource", "recognized", "time_evaluated"],
+  "properties": {
+    "entity_id": {
+      "type": "string",
+      "description": "The identifier for the entity tested"
+    },
+    "authority_id": {
+      "type": "string",
+      "description": "The identifier for the authority queried"
+    },
+    "action": {
+      "type": "string",
+      "description": "The action checked"
+    },
+    "resource": {
+      "type": "string",
+      "description": "The resource checked"
+    },
+    "recognized": {
+      "type": "boolean",
+      "description": "True if recognized, false otherwise"
+    },
+    "time_requested": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The time requested (from context)"
+    },
+    "time_evaluated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The server time used in evaluation"
+    },
+    "message": {
+      "type": "string",
+      "description": "Additional details about the response"
+    },
+    "context": {
+      "type": "object",
+      "description": "The context object from the request"
+    }
+  },
+  "additionalProperties": false
+}
