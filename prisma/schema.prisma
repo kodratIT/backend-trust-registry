@@ -59,6 +59,7 @@ model TrustRegistry {
   issuers               Issuer[]
   verifiers             Verifier[]
   federationConnections FederationConnection[]
+  recognitionsGiven     RegistryRecognition[] @relation("RecognitionAuthority")
   
   @@index([status])
   @@index([ecosystemDid])
@@ -284,6 +285,47 @@ model RegistryEntry {
   
   @@index([entryType, entityId])
   @@map("registry_entries")
+}
+
+// ============================================
+// REGISTRY RECOGNITION (TRQP Inter-Registry Trust)
+// ============================================
+
+model RegistryRecognition {
+  id          String    @id @default(uuid())
+  
+  // The authority making the recognition (our registry)
+  authorityId String
+  
+  // The entity being recognized (another registry's ecosystemDid)
+  entityId    String    @db.VarChar(500)
+  
+  // Recognition details following TRQP spec
+  action      String    @db.VarChar(100) // recognize, govern, etc
+  resource    String    @db.VarChar(500) // Scope of recognition
+  recognized  Boolean   @default(true)
+  
+  // Validity period
+  validFrom   DateTime?
+  validUntil  DateTime?
+  
+  // Additional metadata
+  metadata    Json?
+  
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  authority   TrustRegistry @relation("RecognitionAuthority", fields: [authorityId], references: [id], onDelete: Cascade)
+  
+  // Ensure unique recognition per authority-entity-action-resource
+  @@unique([authorityId, entityId, action, resource])
+  @@index([authorityId])
+  @@index([entityId])
+  @@index([action])
+  @@index([recognized])
+  @@map("registry_recognitions")
 }
 
 // ============================================

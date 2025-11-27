@@ -19,6 +19,9 @@ jest.mock('@prisma/client', () => {
     verifier: {
       findFirst: jest.fn(),
     },
+    registryRecognition: {
+      findFirst: jest.fn(),
+    },
   };
   return {
     PrismaClient: jest.fn(() => mockPrismaClient),
@@ -256,7 +259,9 @@ describe('TRQP Controller', () => {
       expect(response.body.title).toBe('Validation Error');
     });
 
-    it('should return recognized=false (placeholder implementation)', async () => {
+    it('should return recognized=false when authority not found', async () => {
+      (prisma.trustRegistry.findFirst as jest.Mock).mockResolvedValue(null);
+
       const response = await request(app)
         .post('/v2/recognition')
         .send(validRequest);
@@ -266,7 +271,52 @@ describe('TRQP Controller', () => {
       expect(response.body.entity_id).toBe(validRequest.entity_id);
       expect(response.body.authority_id).toBe(validRequest.authority_id);
       expect(response.body.time_evaluated).toBeDefined();
-      expect(response.body.message).toContain('Sprint 2');
+      expect(response.body.message).toContain('not found');
+    });
+
+    it('should return recognized=true when recognition exists', async () => {
+      const mockRegistry = {
+        id: 'registry-123',
+        ecosystemDid: validRequest.authority_id,
+      };
+
+      const mockRecognition = {
+        id: 'recognition-123',
+        authorityId: 'registry-123',
+        entityId: validRequest.entity_id,
+        action: validRequest.action,
+        resource: validRequest.resource,
+        recognized: true,
+      };
+
+      (prisma.trustRegistry.findFirst as jest.Mock).mockResolvedValue(mockRegistry);
+      (prisma.registryRecognition.findFirst as jest.Mock).mockResolvedValue(mockRecognition);
+
+      const response = await request(app)
+        .post('/v2/recognition')
+        .send(validRequest);
+
+      expect(response.status).toBe(200);
+      expect(response.body.recognized).toBe(true);
+      expect(response.body.message).toContain('is recognized');
+    });
+
+    it('should return recognized=false when no recognition exists', async () => {
+      const mockRegistry = {
+        id: 'registry-123',
+        ecosystemDid: validRequest.authority_id,
+      };
+
+      (prisma.trustRegistry.findFirst as jest.Mock).mockResolvedValue(mockRegistry);
+      (prisma.registryRecognition.findFirst as jest.Mock).mockResolvedValue(null);
+
+      const response = await request(app)
+        .post('/v2/recognition')
+        .send(validRequest);
+
+      expect(response.status).toBe(200);
+      expect(response.body.recognized).toBe(false);
+      expect(response.body.message).toContain('NOT recognized');
     });
   });
 });

@@ -169,26 +169,85 @@ function buildAuthorizationResponse(
 }
 
 // ============================================
-// Recognition Query (Placeholder for Sprint 2)
+// Recognition Query
 // ============================================
 
 /**
  * Process TRQP Recognition Query
- * Note: Full implementation in Sprint 2 after Recognition model is created
+ * Query if authority recognizes another entity as an authority
  */
-export function processRecognitionQuery(
+export async function processRecognitionQuery(
   request: TRQPRecognitionRequest
+): Promise<TRQPRecognitionResponse> {
+  // Lookup authority (our registry) by ecosystemDid
+  const authority = await prisma.trustRegistry.findFirst({
+    where: { ecosystemDid: request.authority_id },
+  });
+
+  if (!authority) {
+    return buildRecognitionResponse(request, false,
+      `Authority '${request.authority_id}' not found`);
+  }
+
+  // Build validity date filter
+  const validAt = request.context?.time ? new Date(request.context.time) : new Date();
+
+  // Query recognition relationship
+  const recognition = await prisma.registryRecognition.findFirst({
+    where: {
+      authorityId: authority.id,
+      entityId: request.entity_id,
+      action: request.action,
+      resource: request.resource,
+      recognized: true,
+      OR: [
+        { validFrom: null, validUntil: null },
+        { validFrom: { lte: validAt }, validUntil: null },
+        { validFrom: null, validUntil: { gte: validAt } },
+        { validFrom: { lte: validAt }, validUntil: { gte: validAt } },
+      ],
+    },
+  });
+
+  if (recognition) {
+    return buildRecognitionResponse(request, true,
+      `${request.entity_id} is recognized by ${request.authority_id} for ${request.action}+${request.resource}`);
+  }
+
+  // Check if any recognition exists (but maybe expired or different scope)
+  const anyRecognition = await prisma.registryRecognition.findFirst({
+    where: {
+      authorityId: authority.id,
+      entityId: request.entity_id,
+    },
+  });
+
+  if (anyRecognition) {
+    return buildRecognitionResponse(request, false,
+      `${request.entity_id} is NOT recognized for ${request.action}+${request.resource} (scope mismatch or expired)`);
+  }
+
+  return buildRecognitionResponse(request, false,
+    `${request.entity_id} is NOT recognized by ${request.authority_id}`);
+}
+
+/**
+ * Build Recognition Response
+ */
+function buildRecognitionResponse(
+  request: TRQPRecognitionRequest,
+  recognized: boolean,
+  message: string
 ): TRQPRecognitionResponse {
-  // For now, return not recognized since Recognition model doesn't exist yet
   return {
     entity_id: request.entity_id,
     authority_id: request.authority_id,
     action: request.action,
     resource: request.resource,
-    recognized: false,
+    recognized,
     time_requested: request.context?.time,
     time_evaluated: new Date().toISOString(),
-    message: 'Recognition queries will be available after Sprint 2 implementation',
+    message,
     context: request.context,
   };
 }

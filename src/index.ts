@@ -146,6 +146,7 @@ import auditRoutes from './routes/auditRoutes';
 import queryRoutes from './routes/queryRoutes';
 import signedEntryRoutes from './routes/signedEntryRoutes';
 import trqpRoutes from './routes/trqpRoutes';
+import recognitionRoutes from './routes/recognitionRoutes';
 
 app.use('/v2/api-keys', apiKeyRoutes);
 app.use('/v2/trust-frameworks', trustFrameworkRoutes);
@@ -157,6 +158,7 @@ app.use('/v2/audit-log', auditRoutes);
 app.use('/v2/query', queryRoutes);
 app.use('/v2', signedEntryRoutes);
 app.use('/v2', trqpRoutes);
+app.use('/v2/recognitions', recognitionRoutes);
 
 // Import error handlers
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';

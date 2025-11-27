@@ -202,10 +202,10 @@ export async function authorizationQuery(
  *       400:
  *         description: Invalid request
  */
-export function recognitionQuery(
+export async function recognitionQuery(
   req: AuthenticatedRequest,
   res: Response
-): void {
+): Promise<void> {
   try {
     const body = req.body as TRQPRecognitionRequest;
 
@@ -223,7 +223,7 @@ export function recognitionQuery(
     }
 
     // Process recognition query
-    const result = processRecognitionQuery(body);
+    const result = await processRecognitionQuery(body);
 
     res.status(200).json(result);
   } catch (error) {
