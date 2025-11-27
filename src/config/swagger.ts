@@ -103,6 +103,33 @@ const options: swaggerJsdoc.Options = {
             },
           },
         },
+        ProblemDetails: {
+          type: 'object',
+          description: 'RFC 7807 Problem Details',
+          properties: {
+            type: {
+              type: 'string',
+              format: 'uri',
+              description: 'URI reference identifying the problem type',
+            },
+            title: {
+              type: 'string',
+              description: 'Short human-readable summary',
+            },
+            status: {
+              type: 'integer',
+              description: 'HTTP status code',
+            },
+            detail: {
+              type: 'string',
+              description: 'Human-readable explanation',
+            },
+            instance: {
+              type: 'string',
+              description: 'URI reference identifying the specific occurrence',
+            },
+          },
+        },
         PaginationMeta: {
           type: 'object',
           properties: {
@@ -277,6 +304,14 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'Query',
         description: 'Trust resolution query API',
+      },
+      {
+        name: 'TRQP',
+        description: 'TRQP v2 Protocol endpoints (Authorization & Recognition queries)',
+      },
+      {
+        name: 'Recognitions',
+        description: 'Registry recognition management (admin only)',
       },
     ],
   },
