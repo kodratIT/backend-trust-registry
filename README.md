@@ -129,11 +129,26 @@ See [Authentication Guide](./docs/AUTHENTICATION.md) for complete documentation.
 
 ## 📚 Documentation
 
-- [Authentication & Authorization](./docs/AUTHENTICATION.md) ⭐
+- [API Guide - Flow & Usage](./docs/API-GUIDE.md) ⭐ **Start Here**
+- [Endpoint Reference](./docs/ENDPOINTS.md) - Detail semua endpoints
+- [TRQP Protocol](./docs/TRQP-API.md) - Authorization & Recognition queries
+- [Authentication & Authorization](./docs/AUTHENTICATION.md)
+- [Credential Schema API](./docs/CREDENTIAL-SCHEMA-API.md)
+- [Trust Registry API](./docs/TRUST-REGISTRY-API.md)
+- [Testing Guide](./docs/TESTING.md)
 - [Docker Setup Guide](./DOCKER.md)
-- [API Documentation](./docs/api-endpoints.md)
-- [Database Schema](./docs/database-schema.md)
-- [Architecture](./docs/architecture.md)
+
+### Swagger UI
+
+API documentation tersedia di:
+```
+http://localhost:3000/api-docs
+```
+
+Download OpenAPI spec:
+```
+http://localhost:3000/api-docs/swagger.json
+```
 
 ## 🔐 Environment Variables
 

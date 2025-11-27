@@ -14,61 +14,34 @@ import { AuthenticatedRequest } from '../middleware/authenticate';
 const prisma = new PrismaClient();
 
 /**
- * @swagger
- * /v2/recognitions:
- *   post:
- *     summary: Create a recognition relationship
- *     description: Create a new recognition between registries (admin only)
- *     tags: [Recognitions]
- *     security:
- *       - ApiKeyAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - authorityRegistryId
- *               - entityId
- *               - action
- *               - resource
- *             properties:
- *               authorityRegistryId:
- *                 type: string
- *                 format: uuid
- *                 description: ID of the authority registry
- *               entityId:
- *                 type: string
- *                 description: DID of the entity being recognized
- *               action:
- *                 type: string
- *                 description: Action scope (govern, recognize)
- *               resource:
- *                 type: string
- *                 description: Resource scope
- *               validFrom:
- *                 type: string
- *                 format: date-time
- *               validUntil:
- *                 type: string
- *                 format: date-time
- *               metadata:
- *                 type: object
- *     responses:
- *       201:
- *         description: Recognition created
- *       400:
- *         description: Validation error
- *       409:
- *         description: Recognition already exists
+ * Request body for creating recognition
  */
-export async function createRecognition(
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> {
+interface CreateRecognitionBody {
+  authorityRegistryId: string;
+  entityId: string;
+  action: string;
+  resource: string;
+  validFrom?: string;
+  validUntil?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  metadata?: any;
+}
+
+/**
+ * Create a new recognition relationship
+ * Swagger documentation is in routes/recognitionRoutes.ts
+ */
+export async function createRecognition(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { authorityRegistryId, entityId, action, resource, validFrom, validUntil, metadata } = req.body;
+    const body = req.body as CreateRecognitionBody;
+    const authorityRegistryId = body.authorityRegistryId;
+    const entityId = body.entityId;
+    const action = body.action;
+    const resource = body.resource;
+    const validFrom = body.validFrom;
+    const validUntil = body.validUntil;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const metadata = body.metadata;
 
     // Validate required fields
     if (!authorityRegistryId || !entityId || !action || !resource) {
@@ -91,7 +64,6 @@ export async function createRecognition(
       });
       return;
     }
-
 
     // Check for existing recognition
     const existing = await prisma.registryRecognition.findUnique({
@@ -123,7 +95,8 @@ export async function createRecognition(
         recognized: true,
         validFrom: validFrom ? new Date(validFrom) : null,
         validUntil: validUntil ? new Date(validUntil) : null,
-        metadata: metadata || null,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        metadata: metadata ?? undefined,
       },
       include: {
         authority: {
@@ -146,63 +119,33 @@ export async function createRecognition(
 }
 
 /**
- * @swagger
- * /v2/recognitions:
- *   get:
- *     summary: List all recognitions
- *     description: Retrieve recognitions with filtering (admin only)
- *     tags: [Recognitions]
- *     security:
- *       - ApiKeyAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *       - in: query
- *         name: authorityId
- *         schema:
- *           type: string
- *       - in: query
- *         name: entityId
- *         schema:
- *           type: string
- *       - in: query
- *         name: action
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: List of recognitions
+ * List all recognitions with filtering
+ * Swagger documentation is in routes/recognitionRoutes.ts
  */
-export async function listRecognitions(
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> {
+export async function listRecognitions(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const {
-      page = '1',
-      limit = '10',
-      authorityId,
-      entityId,
-      action,
-    } = req.query;
+    const page = (req.query.page as string) || '1';
+    const limit = (req.query.limit as string) || '10';
+    const authorityId = req.query.authorityId as string | undefined;
+    const entityId = req.query.entityId as string | undefined;
+    const action = req.query.action as string | undefined;
 
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = Math.min(parseInt(limit as string, 10), 100);
+    const pageNum = parseInt(page, 10);
+    const limitNum = Math.min(parseInt(limit, 10), 100);
     const skip = (pageNum - 1) * limitNum;
 
     // Build where clause
-    const where: Record<string, unknown> = {};
-    if (authorityId) where.authorityId = authorityId;
-    if (entityId) where.entityId = entityId;
-    if (action) where.action = action;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: Record<string, any> = {};
+    if (authorityId) {
+      where.authorityId = authorityId;
+    }
+    if (entityId) {
+      where.entityId = entityId;
+    }
+    if (action) {
+      where.action = action;
+    }
 
     const [recognitions, total] = await Promise.all([
       prisma.registryRecognition.findMany({
@@ -238,29 +181,10 @@ export async function listRecognitions(
 }
 
 /**
- * @swagger
- * /v2/recognitions/{id}:
- *   get:
- *     summary: Get recognition by ID
- *     tags: [Recognitions]
- *     security:
- *       - ApiKeyAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Recognition details
- *       404:
- *         description: Not found
+ * Get recognition by ID
+ * Swagger documentation is in routes/recognitionRoutes.ts
  */
-export async function getRecognition(
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> {
+export async function getRecognition(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
 
@@ -292,29 +216,10 @@ export async function getRecognition(
 }
 
 /**
- * @swagger
- * /v2/recognitions/{id}:
- *   delete:
- *     summary: Revoke a recognition
- *     tags: [Recognitions]
- *     security:
- *       - ApiKeyAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Recognition revoked
- *       404:
- *         description: Not found
+ * Revoke/delete a recognition
+ * Swagger documentation is in routes/recognitionRoutes.ts
  */
-export async function deleteRecognition(
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> {
+export async function deleteRecognition(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const { id } = req.params;
 

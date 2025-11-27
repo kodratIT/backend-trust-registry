@@ -12,17 +12,17 @@
     "authority_id": {
       "type": "string",
       "minLength": 1,
-      "description": "The identifier for the authority being queried"
+      "description": "The identifier for the authority (e.g. ecosystem governing authority) being queried to recognize the entity"
     },
     "action": {
       "type": "string",
       "minLength": 1,
-      "description": "The action to check recognition for"
+      "description": "The action that the query is checking Recognition for"
     },
     "resource": {
       "type": "string",
       "minLength": 1,
-      "description": "The resource to check recognition for"
+      "description": "The resource that the query is checking Recognition for"
     },
     "context": {
       "type": "object",
@@ -30,11 +30,16 @@
         "time": {
           "type": "string",
           "format": "date-time",
-          "description": "Time for query. RFC3339 format"
+          "description": "Time for query to use. If blank, uses current server time. RFC3339 required, using only Z (+00:00) offset."
+        },
+        "locator": {
+          "type": "string",
+          "description": "Provided for systems that require additional information to locate the records in question."
         }
       },
-      "additionalProperties": true
+      "additionalProperties": {
+        "type": "string"
+      }
     }
-  },
-  "additionalProperties": false
+  }
 }

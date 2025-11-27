@@ -7,22 +7,22 @@
     "entity_id": {
       "type": "string",
       "minLength": 1,
-      "description": "The identifier for the entity being tested for authorization"
+      "description": "The identifier for the entity that is being tested for authorization"
     },
     "authority_id": {
       "type": "string",
       "minLength": 1,
-      "description": "The identifier for the authority (ecosystem) being queried"
+      "description": "The identifier for the authority (e.g. ecosystem governing authority) that is being queried"
     },
     "action": {
       "type": "string",
       "minLength": 1,
-      "description": "The action to check authorization for"
+      "description": "The action that the query is checking Authorization for"
     },
     "resource": {
       "type": "string",
       "minLength": 1,
-      "description": "The resource to check authorization for"
+      "description": "The resource that the query is checking Authorization for"
     },
     "context": {
       "type": "object",
@@ -30,15 +30,16 @@
         "time": {
           "type": "string",
           "format": "date-time",
-          "description": "Time for query. RFC3339 format"
+          "description": "Time for query to use. If blank, uses current server time. RFC3339 required, using only Z (+00:00) offset."
         },
         "locator": {
           "type": "string",
-          "description": "Additional locator information"
+          "description": "Provided for systems that require additional information to locate the records in question."
         }
       },
-      "additionalProperties": true
+      "additionalProperties": {
+        "type": "string"
+      }
     }
-  },
-  "additionalProperties": false
+  }
 }

@@ -82,29 +82,45 @@ app.get('/api-docs/swagger.json', (_req: Request, res: Response) => {
 // Swagger API Documentation with enhanced options
 const swaggerUiOptions = {
   customCss: `
-    .swagger-ui .topbar { display: none }
+    .swagger-ui .topbar { 
+      display: flex !important;
+      background-color: #1a1a2e;
+      padding: 10px 20px;
+    }
+    .swagger-ui .topbar .download-url-wrapper { display: flex; flex: 1; }
+    .swagger-ui .topbar .download-url-wrapper input[type=text] {
+      border: 1px solid #4a4a6a;
+      background: #16213e;
+      color: #e8e8e8;
+      padding: 8px 12px;
+      border-radius: 4px;
+      flex: 1;
+      max-width: 500px;
+    }
+    .swagger-ui .topbar .download-url-wrapper .download-url-button {
+      background: #0f3460;
+      color: #e8e8e8;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .swagger-ui .topbar .download-url-wrapper .download-url-button:hover {
+      background: #1a4a7a;
+    }
+    .swagger-ui .topbar-wrapper { display: none; }
     .swagger-ui .info { margin: 20px 0; }
+    .swagger-ui .info .title { font-size: 28px; }
     .swagger-ui .scheme-container { 
-      background: #fafafa; 
-      padding: 20px; 
-      margin: 20px 0;
-      border-radius: 4px;
-    }
-    .swagger-ui .servers { 
-      margin: 20px 0; 
-    }
-    .swagger-ui .servers-title {
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .swagger-ui select {
-      font-size: 14px;
-      padding: 8px;
-      border-radius: 4px;
+      background: #f8f9fa; 
+      padding: 15px 20px; 
+      margin: 15px 0;
+      border-radius: 6px;
+      border: 1px solid #e9ecef;
     }
   `,
-  customSiteTitle: 'ToIP Trust Registry v2 API Documentation',
+  customSiteTitle: 'ToIP Trust Registry v2 - API Docs',
   swaggerOptions: {
     url: '/api-docs/swagger.json',
     deepLinking: true,

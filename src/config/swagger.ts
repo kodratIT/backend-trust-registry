@@ -10,43 +10,30 @@ import { env } from './env';
 
 const options: swaggerJsdoc.Options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: '3.0.3',
     info: {
       title: 'ToIP Trust Registry v2 API',
       version: '1.0.0',
-      description:
-        'REST API for ToIP Trust Registry v2 - A verifiable credentials trust registry implementation',
+      description: `Trust Registry Query Protocol (TRQP) v2 implementation following [ToIP specification](https://github.com/trustoverip/tswg-trust-registry-protocol).
+
+**Auth:** \`X-API-Key\` header | **TRQP endpoints:** Public (no auth required)`,
       contact: {
-        name: 'ToIP Trust Registry Team',
-        email: 'support@trustregistry.example.com',
+        name: 'GitHub',
+        url: 'https://github.com/trustoverip/tswg-trust-registry-protocol',
       },
       license: {
-        name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT',
+        name: 'Apache 2.0',
+        url: 'https://www.apache.org/licenses/LICENSE-2.0',
       },
+    },
+    externalDocs: {
+      description: 'TRQP Specification',
+      url: 'https://github.com/trustoverip/tswg-trust-registry-protocol',
     },
     servers: [
       {
         url: `http://${env.HOST}:${env.PORT}`,
-        description: 'Development Server (Local)',
-        variables: {
-          host: {
-            default: env.HOST,
-            description: 'Server host',
-          },
-          port: {
-            default: env.PORT.toString(),
-            description: 'Server port',
-          },
-        },
-      },
-      {
-        url: 'http://localhost:3000',
-        description: 'Local Development',
-      },
-      {
-        url: 'https://api.trustregistry.example.com',
-        description: 'Production Server',
+        description: 'API Server',
       },
     ],
     components: {
@@ -262,57 +249,195 @@ const options: swaggerJsdoc.Options = {
             },
           },
         },
+        Recognition: {
+          type: 'object',
+          description: 'Inter-registry recognition relationship',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique identifier',
+            },
+            authorityId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'ID of the authority registry',
+            },
+            entityId: {
+              type: 'string',
+              description: 'DID of the recognized entity',
+            },
+            action: {
+              type: 'string',
+              description: 'Action scope (govern, recognize)',
+            },
+            resource: {
+              type: 'string',
+              description: 'Resource scope',
+            },
+            recognized: {
+              type: 'boolean',
+              description: 'Recognition status',
+            },
+            validFrom: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description: 'Start of validity period',
+            },
+            validUntil: {
+              type: 'string',
+              format: 'date-time',
+              nullable: true,
+              description: 'End of validity period',
+            },
+            metadata: {
+              type: 'object',
+              nullable: true,
+              description: 'Additional metadata',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Creation timestamp',
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp',
+            },
+            authority: {
+              type: 'object',
+              description: 'Authority registry details',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                ecosystemDid: { type: 'string' },
+              },
+            },
+          },
+        },
+        TRQPAuthorizationRequest: {
+          type: 'object',
+          description: 'TRQP Authorization Query Request',
+          required: ['entity_id', 'authority_id', 'action', 'resource'],
+          properties: {
+            entity_id: {
+              type: 'string',
+              description: 'DID of the entity being queried',
+              example: 'did:web:university.edu',
+            },
+            authority_id: {
+              type: 'string',
+              description: 'DID of the authority (ecosystem)',
+              example: 'did:web:education-trust.org',
+            },
+            action: {
+              type: 'string',
+              description: 'Action to check (issue, verify)',
+              example: 'issue',
+            },
+            resource: {
+              type: 'string',
+              description: 'Resource/credential type',
+              example: 'UniversityDegree',
+            },
+            context: {
+              type: 'object',
+              properties: {
+                time: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Time for validity check (RFC3339)',
+                },
+              },
+            },
+          },
+        },
+        TRQPAuthorizationResponse: {
+          type: 'object',
+          description: 'TRQP Authorization Query Response',
+          properties: {
+            entity_id: { type: 'string' },
+            authority_id: { type: 'string' },
+            action: { type: 'string' },
+            resource: { type: 'string' },
+            authorized: { type: 'boolean' },
+            time_requested: { type: 'string', format: 'date-time' },
+            time_evaluated: { type: 'string', format: 'date-time' },
+            message: { type: 'string' },
+            context: { type: 'object' },
+          },
+        },
+        TRQPRecognitionRequest: {
+          type: 'object',
+          description: 'TRQP Recognition Query Request',
+          required: ['entity_id', 'authority_id', 'action', 'resource'],
+          properties: {
+            entity_id: {
+              type: 'string',
+              description: 'DID of the entity (another authority)',
+              example: 'did:web:other-registry.org',
+            },
+            authority_id: {
+              type: 'string',
+              description: 'DID of the recognizing authority',
+              example: 'did:web:our-registry.org',
+            },
+            action: {
+              type: 'string',
+              description: 'Action scope (recognize, govern)',
+              example: 'govern',
+            },
+            resource: {
+              type: 'string',
+              description: 'Resource scope',
+              example: 'professional-licenses',
+            },
+            context: {
+              type: 'object',
+              properties: {
+                time: {
+                  type: 'string',
+                  format: 'date-time',
+                },
+              },
+            },
+          },
+        },
+        TRQPRecognitionResponse: {
+          type: 'object',
+          description: 'TRQP Recognition Query Response',
+          properties: {
+            entity_id: { type: 'string' },
+            authority_id: { type: 'string' },
+            action: { type: 'string' },
+            resource: { type: 'string' },
+            recognized: { type: 'boolean' },
+            time_requested: { type: 'string', format: 'date-time' },
+            time_evaluated: { type: 'string', format: 'date-time' },
+            message: { type: 'string' },
+            context: { type: 'object' },
+          },
+        },
       },
     },
     tags: [
-      {
-        name: 'Health',
-        description: 'Health check endpoints',
-      },
-      {
-        name: 'API Keys',
-        description: 'API key management endpoints',
-      },
-      {
-        name: 'Trust Frameworks',
-        description: 'Trust framework CRUD operations',
-      },
-      {
-        name: 'Trust Registries',
-        description: 'Trust registry CRUD operations',
-      },
-      {
-        name: 'Credential Schemas',
-        description: 'Credential schema management with JSON Schema validation',
-      },
-      {
-        name: 'Issuers',
-        description: 'Issuer registration and management',
-      },
-      {
-        name: 'Verifiers',
-        description: 'Verifier registration and management',
-      },
-      {
-        name: 'Delegations',
-        description: 'Issuer delegation chain management',
-      },
-      {
-        name: 'Audit',
-        description: 'Audit log queries (admin only)',
-      },
-      {
-        name: 'Query',
-        description: 'Trust resolution query API',
-      },
+      { name: 'Health', description: 'Health check endpoints' },
       {
         name: 'TRQP',
-        description: 'TRQP v2 Protocol endpoints (Authorization & Recognition queries)',
+        description: 'TRQP v2 Protocol - Authorization & Recognition queries (Public)',
       },
-      {
-        name: 'Recognitions',
-        description: 'Registry recognition management (admin only)',
-      },
+      { name: 'Trust Frameworks', description: 'Governance framework management' },
+      { name: 'Trust Registries', description: 'Registry management with ecosystem DID' },
+      { name: 'Credential Schemas', description: 'Credential type definitions' },
+      { name: 'Issuers', description: 'Issuer registration & management' },
+      { name: 'Verifiers', description: 'Verifier registration & management' },
+      { name: 'Delegations', description: 'Issuer delegation chains' },
+      { name: 'Recognitions', description: 'Inter-registry recognition (Admin)' },
+      { name: 'Query', description: 'Legacy query API' },
+      { name: 'API Keys', description: 'API key management (Admin)' },
+      { name: 'Audit', description: 'Audit logs (Admin)' },
     ],
   },
   apis: ['./src/routes/*.ts', './src/index.ts'],
