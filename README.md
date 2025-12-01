@@ -24,7 +24,7 @@ docker-compose -f docker-compose.dev.yml logs -f
 # API will be available at http://localhost:3000
 ```
 
-Docker defaults expect `DB_HOST=postgres`, `DB_PORT_INTERNAL=5432` (container port), and `DB_PASSWORD=postgres`. Keep `DATABASE_URL` aligned with those values for local tooling, or set `DATABASE_URL_OVERRIDE` if the container should point at a different connection string (for example, a remote DB or different port). When reusing an old Postgres volume with a new password, recreate it (`docker-compose -f docker-compose.dev.yml down -v`) so the credentials stay in sync. If you run the app outside Docker but use the compose Postgres via the host port, set `DATABASE_URL` to `localhost:${DB_PORT_EXTERNAL:-5435}`.
+Docker defaults expect `DB_HOST=registry-postgres` (unique alias on the Docker network), `DB_PORT_INTERNAL=5432` (container port), and `DB_PASSWORD=postgres`. Keep `DATABASE_URL` aligned with those values for local tooling, or set `DATABASE_URL_OVERRIDE` if the container should point at a different connection string (for example, a remote DB or different port). When reusing an old Postgres volume with a new password, recreate it (`docker-compose -f docker-compose.dev.yml down -v`) so the credentials stay in sync. If you run the app outside Docker but use the compose Postgres via the host port, set `DATABASE_URL` to `localhost:${DB_PORT_EXTERNAL:-5435}`.
 
 See [DOCKER.md](./DOCKER.md) for detailed Docker setup guide.
 

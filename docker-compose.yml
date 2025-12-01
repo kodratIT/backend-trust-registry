@@ -25,7 +25,9 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - toip-dev-network
+      toip-dev-network:
+        aliases:
+          - registry-postgres
 
   # Redis Cache (Development)
   redis:
@@ -60,7 +62,7 @@ services:
       HOST: ${HOST:-0.0.0.0}
       
       # Database Configuration
-      DATABASE_URL: ${DATABASE_URL_OVERRIDE:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@${DB_HOST:-postgres}:${DB_PORT_INTERNAL:-5432}/${DB_NAME:-toip_registry_dev}?schema=public}
+      DATABASE_URL: ${DATABASE_URL_OVERRIDE:-postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@${DB_HOST:-registry-postgres}:${DB_PORT_INTERNAL:-5432}/${DB_NAME:-toip_registry_dev}?schema=public}
       
       # Redis Configuration
       REDIS_URL: redis://:${REDIS_PASSWORD:-redis}@redis:6379
