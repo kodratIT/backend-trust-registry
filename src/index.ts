@@ -163,6 +163,10 @@ import queryRoutes from './routes/queryRoutes';
 import signedEntryRoutes from './routes/signedEntryRoutes';
 import trqpRoutes from './routes/trqpRoutes';
 import recognitionRoutes from './routes/recognitionRoutes';
+import publicRoutes from './routes/publicRoutes';
+
+// Public routes (no auth required) - like EU Trusted List
+app.use('/v2/public', publicRoutes);
 
 app.use('/v2/api-keys', apiKeyRoutes);
 app.use('/v2/trust-frameworks', trustFrameworkRoutes);

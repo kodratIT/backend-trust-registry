@@ -14,16 +14,26 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authenticate';
 import { PrismaClient } from '@prisma/client';
+import Ajv2020 from 'ajv/dist/2020';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 const prisma = new PrismaClient();
+
+// AJV instance for draft-07 (default)
 const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
+
+// AJV instance for draft 2020-12
+const ajv2020 = new Ajv2020({ allErrors: true, strict: false });
+addFormats(ajv2020);
 
 // Valid modes for issuer and verifier
 const VALID_MODES = ['OPEN', 'ECOSYSTEM', 'GRANTOR'];
 
 /**
  * Validate JSON Schema structure
+ * Supports both draft-07 and draft 2020-12
  */
 function validateJsonSchema(schema: any): { valid: boolean; error?: string } {
   try {
@@ -36,8 +46,17 @@ function validateJsonSchema(schema: any): { valid: boolean; error?: string } {
       return { valid: false, error: 'JSON Schema must have a type, $ref, or composition keyword' };
     }
 
-    // Try to compile the schema to validate it
-    ajv.compile(schema);
+    // Determine which AJV instance to use based on $schema
+    const schemaVersion = schema.$schema || '';
+    
+    if (schemaVersion.includes('2020-12') || schemaVersion.includes('2019-09')) {
+      // Use AJV 2020 for newer drafts
+      ajv2020.compile(schema);
+    } else {
+      // Use standard AJV for draft-07 and older
+      ajv.compile(schema);
+    }
+    
     return { valid: true };
   } catch (error: any) {
     return { valid: false, error: `Invalid JSON Schema: ${error.message}` };
@@ -741,7 +760,15 @@ export async function validateAgainstSchema(
 
     // Validate data against schema
     try {
-      const validate = ajv.compile(schema.jsonSchema as object);
+      const jsonSchema = schema.jsonSchema as any;
+      const schemaVersion = jsonSchema?.$schema || '';
+      
+      // Use appropriate AJV instance based on schema version
+      const ajvInstance = (schemaVersion.includes('2020-12') || schemaVersion.includes('2019-09')) 
+        ? ajv2020 
+        : ajv;
+      
+      const validate = ajvInstance.compile(jsonSchema);
       const valid = validate(data);
 
       if (valid) {

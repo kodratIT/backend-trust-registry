@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 
 import { Router } from 'express';
-import { authorizationQuery, recognitionQuery } from '../controllers/trqpController';
+import { authorizationQuery, recognitionQuery, getMetadata } from '../controllers/trqpController';
 import { optionalAuthenticate } from '../middleware/authenticate';
 
 const router = Router();
@@ -169,5 +169,90 @@ router.post('/authorization', optionalAuthenticate, authorizationQuery);
  *         description: Internal server error
  */
 router.post('/recognition', optionalAuthenticate, recognitionQuery);
+
+/**
+ * @swagger
+ * /v2/metadata:
+ *   get:
+ *     summary: TRQP Registry Metadata (Service Discovery)
+ *     description: |
+ *       Get comprehensive metadata about this trust registry including supported features,
+ *       endpoints, DID methods, and capabilities. This endpoint enables service discovery
+ *       and auto-configuration for clients.
+ *
+ *       **TRQP v2 Compliance**: This endpoint is part of the TRQP v2 specification for
+ *       service discovery and federation compatibility checking.
+ *
+ *       **Use Cases:**
+ *       - **Service Discovery**: Wallets and applications auto-discover registry capabilities
+ *       - **Federation**: Other registries check compatibility before establishing trust
+ *       - **Developer Onboarding**: Quick overview of available features and endpoints
+ *       - **Version Detection**: Clients determine protocol version and compatibility
+ *       - **Feature Detection**: Clients check which features are available before use
+ *
+ *       **Caching**: Clients should cache this response (recommended TTL: 1 hour)
+ *     tags: [TRQP]
+ *     responses:
+ *       200:
+ *         description: Registry metadata with complete capability information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TRQPMetadataResponse'
+ *             examples:
+ *               full_metadata:
+ *                 summary: Complete registry metadata
+ *                 value:
+ *                   name: "ToIP Trust Registry v2"
+ *                   version: "2.0.0"
+ *                   protocol: "ToIP Trust Registry Query Protocol v2"
+ *                   specification: "https://trustoverip.github.io/tswg-trust-registry-protocol/"
+ *                   description: "A verifiable credentials trust registry implementing TRQP v2 specification"
+ *                   endpoints:
+ *                     authorization: "/v2/authorization"
+ *                     recognition: "/v2/recognition"
+ *                     metadata: "/v2/metadata"
+ *                     public:
+ *                       registries: "/v2/public/registries"
+ *                       issuers: "/v2/public/issuers"
+ *                       verifiers: "/v2/public/verifiers"
+ *                       schemas: "/v2/public/schemas"
+ *                       lookupIssuer: "/v2/public/lookup/issuer/{did}"
+ *                       lookupVerifier: "/v2/public/lookup/verifier/{did}"
+ *                     management:
+ *                       trustFrameworks: "/v2/trust-frameworks"
+ *                       registries: "/v2/registries"
+ *                       schemas: "/v2/schemas"
+ *                       issuers: "/v2/issuers"
+ *                       verifiers: "/v2/verifiers"
+ *                       recognitions: "/v2/recognitions"
+ *                       auditLog: "/v2/audit-log"
+ *                   supportedActions: ["issue", "verify", "recognize", "govern", "delegate"]
+ *                   supportedDIDMethods: ["web", "key", "indy", "ion", "ethr", "sov"]
+ *                   features:
+ *                     authorization: true
+ *                     recognition: true
+ *                     delegation: true
+ *                     federation: true
+ *                     signedEntries: true
+ *                     auditLog: true
+ *                     publicTrustedList: true
+ *                     didResolution: true
+ *                     caching: true
+ *                     rateLimiting: true
+ *                   documentation: "http://localhost:3000/api-docs"
+ *                   contact:
+ *                     name: "Technical Team"
+ *                     email: "support@trustregistry.example.com"
+ *                   status: "operational"
+ *                   timestamp: "2024-11-27T10:30:00Z"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/problem+json:
+ *             schema:
+ *               $ref: '#/components/schemas/ProblemDetails'
+ */
+router.get('/metadata', getMetadata);
 
 export default router;

@@ -109,7 +109,7 @@ export async function createVerifier(req: AuthenticatedRequest, res: Response): 
 
     await prisma.statusHistory.create({
       data: {
-        entityType: 'verifier', entityId: verifier.id, status: verifier.status,
+        entityType: 'verifier', entityId: verifier.id, verifierId: verifier.id, status: verifier.status,
         previousStatus: null, reason: 'Initial registration', changedBy: req.user?.id || 'system',
       },
     });
@@ -305,7 +305,7 @@ export async function updateVerifierStatus(req: AuthenticatedRequest, res: Respo
     });
 
     await prisma.statusHistory.create({
-      data: { entityType: 'verifier', entityId: verifier.id, status, previousStatus: existing.status, reason: reason || null, changedBy: req.user?.id || 'system' },
+      data: { entityType: 'verifier', entityId: verifier.id, verifierId: verifier.id, status, previousStatus: existing.status, reason: reason || null, changedBy: req.user?.id || 'system' },
     });
 
     res.status(200).json({ message: 'Verifier status updated successfully', data: verifier });

@@ -132,6 +132,8 @@ See [Authentication Guide](./docs/AUTHENTICATION.md) for complete documentation.
 - [API Guide - Flow & Usage](./docs/API-GUIDE.md) ⭐ **Start Here**
 - [Endpoint Reference](./docs/ENDPOINTS.md) - Detail semua endpoints
 - [TRQP Protocol](./docs/TRQP-API.md) - Authorization & Recognition queries
+- [Metadata Endpoint](./docs/METADATA-ENDPOINT.md) - Service discovery & auto-configuration
+- [Public API](./docs/PUBLIC-API.md) - Wallet integration guide
 - [Authentication & Authorization](./docs/AUTHENTICATION.md)
 - [Credential Schema API](./docs/CREDENTIAL-SCHEMA-API.md)
 - [Trust Registry API](./docs/TRUST-REGISTRY-API.md)

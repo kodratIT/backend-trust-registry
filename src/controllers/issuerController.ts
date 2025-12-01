@@ -175,6 +175,7 @@ export async function createIssuer(req: AuthenticatedRequest, res: Response): Pr
       data: {
         entityType: 'issuer',
         entityId: issuer.id,
+        issuerId: issuer.id,
         status: issuer.status,
         previousStatus: null,
         reason: 'Initial registration',
@@ -496,6 +497,7 @@ export async function updateIssuerStatus(req: AuthenticatedRequest, res: Respons
       data: {
         entityType: 'issuer',
         entityId: issuer.id,
+        issuerId: issuer.id,
         status,
         previousStatus: existing.status,
         reason: reason || null,

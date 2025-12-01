@@ -258,12 +258,18 @@ model StatusHistory {
   changedBy       String?   @db.VarChar(500)
   timestamp       DateTime  @default(now())
   
-  // Relations (polymorphic)
-  issuer          Issuer?   @relation("IssuerStatusHistory", fields: [entityId], references: [id], onDelete: Cascade, map: "status_history_issuer_fkey")
-  verifier        Verifier? @relation("VerifierStatusHistory", fields: [entityId], references: [id], onDelete: Cascade, map: "status_history_verifier_fkey")
+  // Separate foreign key fields for polymorphic relation
+  issuerId        String?
+  verifierId      String?
+  
+  // Relations
+  issuer          Issuer?   @relation("IssuerStatusHistory", fields: [issuerId], references: [id], onDelete: Cascade)
+  verifier        Verifier? @relation("VerifierStatusHistory", fields: [verifierId], references: [id], onDelete: Cascade)
   
   @@index([entityType, entityId])
   @@index([timestamp])
+  @@index([issuerId])
+  @@index([verifierId])
   @@map("status_history")
 }
 
@@ -279,11 +285,17 @@ model RegistryEntry {
   proof       Json      // Cryptographic proof/signature
   createdAt   DateTime  @default(now())
   
-  // Relations (polymorphic)
-  issuer      Issuer?   @relation("IssuerRegistryEntry", fields: [entityId], references: [id], onDelete: Cascade, map: "registry_entries_issuer_fkey")
-  verifier    Verifier? @relation("VerifierRegistryEntry", fields: [entityId], references: [id], onDelete: Cascade, map: "registry_entries_verifier_fkey")
+  // Separate foreign key fields for polymorphic relation
+  issuerId    String?
+  verifierId  String?
+  
+  // Relations
+  issuer      Issuer?   @relation("IssuerRegistryEntry", fields: [issuerId], references: [id], onDelete: Cascade)
+  verifier    Verifier? @relation("VerifierRegistryEntry", fields: [verifierId], references: [id], onDelete: Cascade)
   
   @@index([entryType, entityId])
+  @@index([issuerId])
+  @@index([verifierId])
   @@map("registry_entries")
 }
 

@@ -420,13 +420,201 @@ const options: swaggerJsdoc.Options = {
             context: { type: 'object' },
           },
         },
+        TRQPMetadataResponse: {
+          type: 'object',
+          description: 'TRQP Registry Metadata Response',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Registry name',
+              example: 'ToIP Trust Registry v2',
+            },
+            version: {
+              type: 'string',
+              description: 'Registry version (semver)',
+              example: '2.0.0',
+            },
+            protocol: {
+              type: 'string',
+              description: 'Protocol name and version',
+              example: 'ToIP Trust Registry Query Protocol v2',
+            },
+            specification: {
+              type: 'string',
+              format: 'uri',
+              description: 'URL to TRQP specification',
+              example: 'https://trustoverip.github.io/tswg-trust-registry-protocol/',
+            },
+            description: {
+              type: 'string',
+              description: 'Registry description',
+              example: 'A verifiable credentials trust registry implementing TRQP v2 specification',
+            },
+            endpoints: {
+              type: 'object',
+              description: 'Available API endpoints',
+              properties: {
+                authorization: {
+                  type: 'string',
+                  description: 'Authorization query endpoint',
+                  example: '/v2/authorization',
+                },
+                recognition: {
+                  type: 'string',
+                  description: 'Recognition query endpoint',
+                  example: '/v2/recognition',
+                },
+                metadata: {
+                  type: 'string',
+                  description: 'Metadata endpoint',
+                  example: '/v2/metadata',
+                },
+                public: {
+                  type: 'object',
+                  description: 'Public endpoints (no auth)',
+                  properties: {
+                    registries: { type: 'string', example: '/v2/public/registries' },
+                    issuers: { type: 'string', example: '/v2/public/issuers' },
+                    verifiers: { type: 'string', example: '/v2/public/verifiers' },
+                    schemas: { type: 'string', example: '/v2/public/schemas' },
+                    lookupIssuer: { type: 'string', example: '/v2/public/lookup/issuer/{did}' },
+                    lookupVerifier: { type: 'string', example: '/v2/public/lookup/verifier/{did}' },
+                  },
+                },
+                management: {
+                  type: 'object',
+                  description: 'Management endpoints (auth required)',
+                  properties: {
+                    trustFrameworks: { type: 'string', example: '/v2/trust-frameworks' },
+                    registries: { type: 'string', example: '/v2/registries' },
+                    schemas: { type: 'string', example: '/v2/schemas' },
+                    issuers: { type: 'string', example: '/v2/issuers' },
+                    verifiers: { type: 'string', example: '/v2/verifiers' },
+                    recognitions: { type: 'string', example: '/v2/recognitions' },
+                    auditLog: { type: 'string', example: '/v2/audit-log' },
+                  },
+                },
+              },
+            },
+            supportedActions: {
+              type: 'array',
+              description: 'TRQP actions supported by this registry',
+              items: {
+                type: 'string',
+                enum: ['issue', 'verify', 'recognize', 'govern', 'delegate'],
+              },
+              example: ['issue', 'verify', 'recognize', 'govern', 'delegate'],
+            },
+            supportedDIDMethods: {
+              type: 'array',
+              description: 'DID methods supported by this registry',
+              items: {
+                type: 'string',
+              },
+              example: ['web', 'key', 'indy', 'ion', 'ethr', 'sov'],
+            },
+            features: {
+              type: 'object',
+              description: 'Feature flags indicating registry capabilities',
+              properties: {
+                authorization: {
+                  type: 'boolean',
+                  description: 'Authorization queries supported',
+                  example: true,
+                },
+                recognition: {
+                  type: 'boolean',
+                  description: 'Recognition queries supported',
+                  example: true,
+                },
+                delegation: {
+                  type: 'boolean',
+                  description: 'Issuer delegation supported',
+                  example: true,
+                },
+                federation: {
+                  type: 'boolean',
+                  description: 'Cross-registry federation supported',
+                  example: true,
+                },
+                signedEntries: {
+                  type: 'boolean',
+                  description: 'Cryptographic signatures on entries',
+                  example: true,
+                },
+                auditLog: {
+                  type: 'boolean',
+                  description: 'Audit logging enabled',
+                  example: true,
+                },
+                publicTrustedList: {
+                  type: 'boolean',
+                  description: 'Public trusted list available',
+                  example: true,
+                },
+                didResolution: {
+                  type: 'boolean',
+                  description: 'DID resolution service available',
+                  example: true,
+                },
+                caching: {
+                  type: 'boolean',
+                  description: 'Response caching enabled',
+                  example: true,
+                },
+                rateLimiting: {
+                  type: 'boolean',
+                  description: 'Rate limiting enabled',
+                  example: true,
+                },
+              },
+            },
+            documentation: {
+              type: 'string',
+              format: 'uri',
+              description: 'URL to API documentation',
+              example: 'http://localhost:3000/api-docs',
+            },
+            contact: {
+              type: 'object',
+              description: 'Contact information',
+              properties: {
+                name: {
+                  type: 'string',
+                  example: 'Technical Team',
+                },
+                email: {
+                  type: 'string',
+                  format: 'email',
+                  example: 'support@trustregistry.example.com',
+                },
+              },
+            },
+            status: {
+              type: 'string',
+              description: 'Service operational status',
+              enum: ['operational', 'maintenance', 'degraded'],
+              example: 'operational',
+            },
+            timestamp: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Current server timestamp (ISO 8601)',
+              example: '2024-11-27T10:30:00Z',
+            },
+          },
+        },
       },
     },
     tags: [
       { name: 'Health', description: 'Health check endpoints' },
       {
         name: 'TRQP',
-        description: 'TRQP v2 Protocol - Authorization & Recognition queries (Public)',
+        description: 'TRQP v2 Protocol - Authorization, Recognition & Metadata (Public)',
+      },
+      {
+        name: 'Public - Trusted List',
+        description: 'Public trusted list endpoints - EU EUTL style (No auth required)',
       },
       { name: 'Trust Frameworks', description: 'Governance framework management' },
       { name: 'Trust Registries', description: 'Registry management with ecosystem DID' },

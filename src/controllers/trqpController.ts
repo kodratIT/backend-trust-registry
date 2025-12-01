@@ -97,3 +97,102 @@ export async function recognitionQuery(req: AuthenticatedRequest, res: Response)
     });
   }
 }
+
+/**
+ * Get TRQP Registry Metadata
+ * Swagger documentation is in routes/trqpRoutes.ts
+ */
+export async function getMetadata(req: AuthenticatedRequest, res: Response): Promise<void> {
+  try {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+    res.status(200).json({
+      name: 'ToIP Trust Registry v2',
+      version: '2.0.0',
+      protocol: 'ToIP Trust Registry Query Protocol v2',
+      specification: 'https://trustoverip.github.io/tswg-trust-registry-protocol/',
+      description: 'A verifiable credentials trust registry implementing TRQP v2 specification',
+      
+      // Core TRQP endpoints
+      endpoints: {
+        authorization: '/v2/authorization',
+        recognition: '/v2/recognition',
+        metadata: '/v2/metadata',
+        
+        // Public endpoints (no auth required)
+        public: {
+          registries: '/v2/public/registries',
+          issuers: '/v2/public/issuers',
+          verifiers: '/v2/public/verifiers',
+          schemas: '/v2/public/schemas',
+          lookupIssuer: '/v2/public/lookup/issuer/{did}',
+          lookupVerifier: '/v2/public/lookup/verifier/{did}',
+        },
+        
+        // Management endpoints (auth required)
+        management: {
+          trustFrameworks: '/v2/trust-frameworks',
+          registries: '/v2/registries',
+          schemas: '/v2/schemas',
+          issuers: '/v2/issuers',
+          verifiers: '/v2/verifiers',
+          recognitions: '/v2/recognitions',
+          auditLog: '/v2/audit-log',
+        }
+      },
+      
+      // Supported TRQP actions
+      supportedActions: [
+        'issue',
+        'verify',
+        'recognize',
+        'govern',
+        'delegate'
+      ],
+      
+      // Supported DID methods
+      supportedDIDMethods: [
+        'web',
+        'key',
+        'indy',
+        'ion',
+        'ethr',
+        'sov'
+      ],
+      
+      // Registry features
+      features: {
+        authorization: true,
+        recognition: true,
+        delegation: true,
+        federation: true,
+        signedEntries: true,
+        auditLog: true,
+        publicTrustedList: true,
+        didResolution: true,
+        caching: true,
+        rateLimiting: true,
+      },
+      
+      // Additional info
+      documentation: `${baseUrl}/api-docs`,
+      contact: {
+        name: 'Technical Team',
+        email: 'support@trustregistry.example.com',
+      },
+      
+      // Service status
+      status: 'operational',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error getting metadata:', error);
+    res.status(500).contentType('application/problem+json').json({
+      type: 'https://api.trustregistry.io/problems/internal-error',
+      title: 'Internal Server Error',
+      status: 500,
+      detail: 'An error occurred retrieving registry metadata',
+      instance: req.path,
+    });
+  }
+}
