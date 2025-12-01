@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
     ports:
-      - "${DB_PORT:-5433}:5432"
+      - "${DB_PORT:-5434}:5432"
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
@@ -34,7 +34,7 @@ services:
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD:-redis} --maxmemory 128mb --maxmemory-policy allkeys-lru
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_PORT:-6380}:6379"
     volumes:
       - redis_dev_data:/data
     healthcheck:
@@ -110,11 +110,14 @@ services:
 # Volumes for data persistence (development)
 volumes:
   postgres_dev_data:
+    name: toip-trust-registry-postgres-dev-data
     driver: local
   redis_dev_data:
+    name: toip-trust-registry-redis-dev-data
     driver: local
 
 # Network configuration (development)
 networks:
   toip-dev-network:
+    name: toip-trust-registry-dev-network
     driver: bridge
