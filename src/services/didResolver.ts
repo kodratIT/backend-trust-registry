@@ -64,7 +64,7 @@ const SUPPORTED_DID_METHODS = ['web', 'key', 'ion', 'ethr', 'sov', 'indy'];
  */
 function getCachedResult(did: string): DIDResolutionResult | null {
   const entry = didCache.get(did);
-  if (!entry) return null;
+  if (!entry) {return null;}
 
   if (Date.now() > entry.expiresAt) {
     didCache.delete(did);

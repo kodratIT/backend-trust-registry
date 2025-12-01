@@ -146,8 +146,8 @@ router.get('/issuers', cacheControl(300), async (req: Request, res: Response) =>
     const skip = (pageNum - 1) * limitNum;
     
     const where: any = {};
-    if (status !== 'all') where.status = 'active';
-    if (registryId) where.registryId = registryId;
+    if (status !== 'all') {where.status = 'active';}
+    if (registryId) {where.registryId = registryId;}
     
     if (credentialType) {
       where.credentialTypes = {
@@ -252,8 +252,8 @@ router.get('/verifiers', cacheControl(300), async (req: Request, res: Response) 
     const skip = (pageNum - 1) * limitNum;
     
     const where: any = {};
-    if (status !== 'all') where.status = 'active';
-    if (registryId) where.registryId = registryId;
+    if (status !== 'all') {where.status = 'active';}
+    if (registryId) {where.registryId = registryId;}
     
     if (credentialType) {
       where.credentialTypes = {
@@ -348,7 +348,7 @@ router.get('/schemas', cacheControl(300), async (req: Request, res: Response) =>
     const skip = (pageNum - 1) * limitNum;
     
     const where: any = {};
-    if (registryId) where.registryId = registryId;
+    if (registryId) {where.registryId = registryId;}
 
     const schemas = await prisma.credentialSchema.findMany({
       where,

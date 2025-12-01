@@ -102,11 +102,10 @@ export async function recognitionQuery(req: AuthenticatedRequest, res: Response)
  * Get TRQP Registry Metadata
  * Swagger documentation is in routes/trqpRoutes.ts
  */
-export async function getMetadata(req: AuthenticatedRequest, res: Response): Promise<void> {
-  try {
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    
-    res.status(200).json({
+export function getMetadata(req: AuthenticatedRequest, res: Response): void {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+  res.status(200).json({
       name: 'ToIP Trust Registry v2',
       version: '2.0.0',
       protocol: 'ToIP Trust Registry Query Protocol v2',
@@ -185,14 +184,4 @@ export async function getMetadata(req: AuthenticatedRequest, res: Response): Pro
       status: 'operational',
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Error getting metadata:', error);
-    res.status(500).contentType('application/problem+json').json({
-      type: 'https://api.trustregistry.io/problems/internal-error',
-      title: 'Internal Server Error',
-      status: 500,
-      detail: 'An error occurred retrieving registry metadata',
-      instance: req.path,
-    });
-  }
 }

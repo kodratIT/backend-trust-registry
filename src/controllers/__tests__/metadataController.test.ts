@@ -28,9 +28,9 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      expect(response.body.protocol).toBe('ToIP Trust Registry Query Protocol v2');
-      expect(response.body.version).toBe('2.0.0');
-      expect(response.body.specification).toContain('trustoverip.github.io');
+      expect(response.body).toHaveProperty('protocol', 'ToIP Trust Registry Query Protocol v2');
+      expect(response.body).toHaveProperty('version', '2.0.0');
+      expect(String(response.body.specification)).toContain('trustoverip.github.io');
     });
 
     it('should include all required endpoints', async () => {
@@ -38,7 +38,7 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      const { endpoints } = response.body;
+      const endpoints = response.body.endpoints as Record<string, unknown>;
       
       // Core TRQP endpoints
       expect(endpoints).toHaveProperty('authorization');
@@ -46,10 +46,11 @@ describe('TRQP Metadata Endpoint', () => {
       expect(endpoints).toHaveProperty('metadata');
       
       // Public endpoints
-      expect(endpoints.public).toHaveProperty('registries');
-      expect(endpoints.public).toHaveProperty('issuers');
-      expect(endpoints.public).toHaveProperty('verifiers');
-      expect(endpoints.public).toHaveProperty('schemas');
+      const publicEndpoints = endpoints.public as Record<string, unknown>;
+      expect(publicEndpoints).toHaveProperty('registries');
+      expect(publicEndpoints).toHaveProperty('issuers');
+      expect(publicEndpoints).toHaveProperty('verifiers');
+      expect(publicEndpoints).toHaveProperty('schemas');
     });
 
     it('should list supported TRQP actions', async () => {
@@ -57,7 +58,7 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      const { supportedActions } = response.body;
+      const supportedActions = response.body.supportedActions as string[];
       
       expect(supportedActions).toContain('issue');
       expect(supportedActions).toContain('verify');
@@ -71,7 +72,7 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      const { supportedDIDMethods } = response.body;
+      const supportedDIDMethods = response.body.supportedDIDMethods as string[];
       
       expect(supportedDIDMethods).toContain('web');
       expect(supportedDIDMethods).toContain('key');
@@ -83,7 +84,7 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      const { features } = response.body;
+      const features = response.body.features as Record<string, boolean>;
       
       expect(features.authorization).toBe(true);
       expect(features.recognition).toBe(true);
@@ -99,7 +100,7 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      expect(response.body.status).toBe('operational');
+      expect(response.body).toHaveProperty('status', 'operational');
       expect(response.body).toHaveProperty('timestamp');
     });
 
@@ -109,7 +110,7 @@ describe('TRQP Metadata Endpoint', () => {
         .expect(200);
 
       expect(response.body).toHaveProperty('documentation');
-      expect(response.body.documentation).toContain('/api-docs');
+      expect(String(response.body.documentation)).toContain('/api-docs');
     });
 
     it('should be accessible without authentication', async () => {
@@ -126,7 +127,7 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      const timestamp = response.body.timestamp;
+      const timestamp = String(response.body.timestamp);
       expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
       
       // Should be a valid date
@@ -141,19 +142,21 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      const metadata = response.body;
+      const metadata = response.body as Record<string, unknown>;
+      const endpoints = metadata.endpoints as Record<string, unknown>;
+      const features = metadata.features as Record<string, boolean>;
 
       // Client can discover endpoints
-      expect(metadata.endpoints.authorization).toBeDefined();
-      expect(metadata.endpoints.recognition).toBeDefined();
+      expect(endpoints.authorization).toBeDefined();
+      expect(endpoints.recognition).toBeDefined();
       
       // Client can check capabilities
       expect(metadata.supportedActions).toBeInstanceOf(Array);
       expect(metadata.supportedDIDMethods).toBeInstanceOf(Array);
       
       // Client can check features
-      expect(typeof metadata.features.authorization).toBe('boolean');
-      expect(typeof metadata.features.recognition).toBe('boolean');
+      expect(typeof features.authorization).toBe('boolean');
+      expect(typeof features.recognition).toBe('boolean');
       
       // Client can get documentation
       expect(metadata.documentation).toBeDefined();
@@ -166,15 +169,17 @@ describe('TRQP Metadata Endpoint', () => {
         .get('/v2/metadata')
         .expect(200);
 
-      const metadata = response.body;
+      const metadata = response.body as Record<string, unknown>;
+      const features = metadata.features as Record<string, boolean>;
+      const supportedActions = metadata.supportedActions as string[];
 
       // Other registries can check compatibility
       expect(metadata.protocol).toBe('ToIP Trust Registry Query Protocol v2');
       expect(metadata.version).toBe('2.0.0');
       
       // Check if recognition is supported
-      expect(metadata.features.recognition).toBe(true);
-      expect(metadata.supportedActions).toContain('recognize');
+      expect(features.recognition).toBe(true);
+      expect(supportedActions).toContain('recognize');
     });
   });
 });
