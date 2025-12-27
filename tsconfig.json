@@ -4,7 +4,7 @@
     "target": "ES2022",
     "lib": ["ES2022"],
     "module": "commonjs",
-    
+
     /* Module Resolution */
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -14,7 +14,7 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    
+
     /* Type Checking */
     "strict": true,
     "noImplicitAny": true,
@@ -29,7 +29,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    
+
     /* Emit */
     "declaration": true,
     "declarationMap": true,
@@ -37,19 +37,14 @@
     "outDir": "./dist",
     "removeComments": true,
     "newLine": "lf",
-    
+
     /* Interop Constraints */
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    
+
     /* Completeness */
     "noEmitOnError": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*", "prisma/seed.ts"],
+  "exclude": ["node_modules", "dist"]
 }

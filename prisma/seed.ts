@@ -1,7 +1,7 @@
 /**
  * Database Seed Script
  * ToIP Trust Registry v2 Backend
- * 
+ *
  * This script populates the database with initial test data for development.
  */
 
@@ -51,6 +51,11 @@ async function main() {
   await prisma.dIDDirectory.deleteMany();
   console.log('✅ Existing data cleaned\n');
 
+  console.log(
+    'ℹ️  Skipping migration data creation (Trust Frameworks, Registries, etc.) to ensure a clean state.\n'
+  );
+
+  /* DATA MIGRATION DISABLED
   // ============================================
   // TRUST FRAMEWORKS
   // ============================================
@@ -1281,6 +1286,7 @@ async function main() {
   });
 
   console.log(`✅ Created ${10} registry recognitions\n`);
+  */
 
   // ============================================
   // API KEYS
@@ -1290,7 +1296,7 @@ async function main() {
   // Admin API Key
   const adminKey = generateApiKey();
   const adminKeyHash = await hashApiKey(adminKey);
-  
+
   await prisma.aPIKey.create({
     data: {
       keyHash: adminKeyHash,
@@ -1300,7 +1306,8 @@ async function main() {
     },
   });
 
-  // Registry Owner API Key
+  /*
+  // Registry Owner API Key (Depends on registryCanada which is disabled)
   const registryKey = generateApiKey();
   const registryKeyHash = await hashApiKey(registryKey);
   
@@ -1313,11 +1320,12 @@ async function main() {
       expiresAt: new Date('2025-12-31'),
     },
   });
+  */
 
   // Public API Key
   const publicKey = generateApiKey();
   const publicKeyHash = await hashApiKey(publicKey);
-  
+
   await prisma.aPIKey.create({
     data: {
       keyHash: publicKeyHash,
@@ -1327,8 +1335,9 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created ${3} API keys\n`);
+  console.log(`✅ Created ${2} API keys\n`);
 
+  /*
   // ============================================
   // DID DIRECTORY
   // ============================================
@@ -1420,56 +1429,30 @@ async function main() {
   });
 
   console.log(`✅ Created ${1} audit log\n`);
+  */
 
   // ============================================
   // SUMMARY
   // ============================================
   console.log('═══════════════════════════════════════════════════════════');
-  console.log('✅ Database seed completed successfully!\n');
+  console.log('✅ Database seed completed successfully (Clean Mode)!\n');
   console.log('📊 Summary:');
-  console.log(`   • Trust Frameworks: 10`);
-  console.log(`   • Trust Registries: 45`);
-  console.log(`   • Credential Schemas: 8`);
-  console.log(`   • Issuers: 3`);
-  console.log(`   • Verifiers: 2`);
-  console.log(`   • Registry Recognitions: 10`);
-  console.log(`   • API Keys: 3`);
-  console.log(`   • DID Directory Entries: 5`);
-  console.log(`   • Audit Logs: 1`);
-  console.log('\n🌍 Geographic Coverage (45 Registries):');
-  console.log(`   • North America: 2 registries (CA, US)`);
-  console.log(`   • Europe: 15 registries (EU, DE, FR, UK, NL, SE, NO, DK, FI, IT, ES, PL)`);
-  console.log(`   • Asia Pacific: 13 registries (ID 🇮🇩, SG, MY, TH, PH, VN, AU, NZ, JP, IN, KR, CN, TW)`);
-  console.log(`   • Africa: 6 registries (ZA, KE, NG, EG, GH, MA)`);
-  console.log(`   • Latin America: 6 registries (BR, MX, AR, CL, CO, PE)`);
-  console.log(`   • Middle East: 2 registries (UAE, SA)`);
-  console.log(`   • International: 3 registries (Global, Education, Healthcare)`);
-  console.log('\n🇮🇩 Indonesia Registry:');
-  console.log(`   • Name: Indonesia Digital Identity Registry`);
-  console.log(`   • DID: did:web:registry.digital.go.id`);
-  console.log(`   • Authority: Kementerian Komunikasi dan Informatika (Kominfo)`);
-  console.log(`   • Framework: ASEAN Digital Identity Framework`);
-  console.log(`   • Status: Active`);
-  console.log('\n🤝 Inter-Registry Trust (Recognitions):');
-  console.log(`   • Global ↔ EU, Canada, Indonesia`);
-  console.log(`   • EU ↔ Canada (Mutual Recognition)`);
-  console.log(`   • Indonesia → Canada (Professional Credentials)`);
-  console.log(`   • Education Registry → All National Registries`);
-  console.log(`   • Healthcare Registry → National Registries`);
-  console.log('\n📜 Credential Types:');
-  console.log(`   • Identity: Person ID, EU Digital ID`);
-  console.log(`   • Education: University Degree`);
-  console.log(`   • Professional: Professional License, Medical License`);
-  console.log(`   • Travel: Digital Passport`);
-  console.log(`   • Financial: KYC Verification`);
-  console.log(`   • Employment: Employment Verification`);
+  console.log(`   • Trust Frameworks: 0 (Disabled)`);
+  console.log(`   • Trust Registries: 0 (Disabled)`);
+  console.log(`   • Credential Schemas: 0 (Disabled)`);
+  console.log(`   • Issuers: 0 (Disabled)`);
+  console.log(`   • Verifiers: 0 (Disabled)`);
+  console.log(`   • Registry Recognitions: 0 (Disabled)`);
+  console.log(`   • API Keys: 2 (Admin, Public)`);
+  console.log(`   • DID Directory Entries: 0 (Disabled)`);
+  console.log(`   • Audit Logs: 0 (Disabled)`);
   console.log('═══════════════════════════════════════════════════════════\n');
 
   // Print API Keys (for development use)
   console.log('🔑 API Keys (save these for testing):');
   console.log('═══════════════════════════════════════');
   console.log(`Admin Key:          ${adminKey}`);
-  console.log(`Registry Owner Key: ${registryKey}`);
+  // console.log(`Registry Owner Key: ${registryKey}`); // Disabled
   console.log(`Public Key:         ${publicKey}`);
   console.log('═══════════════════════════════════════\n');
   console.log('⚠️  Note: These keys are for development only!');
@@ -1485,6 +1468,6 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(async () => {
-    await prisma.$disconnect();
+  .finally(() => {
+    void prisma.$disconnect();
   });
