@@ -1302,7 +1302,7 @@ async function main() {
       keyHash: adminKeyHash,
       name: 'Admin API Key',
       role: 'admin',
-      expiresAt: new Date('2025-12-31'),
+      expiresAt: new Date('2026-12-31'),
     },
   });
 
